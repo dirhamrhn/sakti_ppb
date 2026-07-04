@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "644511356395",
+    "project_id": "sakti-9b41e",
+    "storage_bucket": "sakti-9b41e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:644511356395:android:61fe256f50dd5685a435ae",
+        "android_client_info": {
+          "package_name": "com.sakti_final"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB76LvrkokCSgKW45CZ-R8QYQwGSJavqbU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
