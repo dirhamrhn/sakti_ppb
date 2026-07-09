@@ -176,34 +176,53 @@ class AsdosDashboardProvider extends ChangeNotifier {
       }
       final kelas = KelasModel.fromMap(doc.id, doc.data()!);
 
+      // Check existing meetings first to prevent duplicates
+      final existingSnap = await _firestore
+          .collection('pertemuan')
+          .where('jadwalId', isEqualTo: jadwal.id)
+          .get();
+
+      final existingPertemuanKe = existingSnap.docs
+          .map((d) => d.data()['pertemuanKe'] as int?)
+          .whereType<int>()
+          .toSet();
+
       final batch = _firestore.batch();
+      bool hasNew = false;
+
       for (int i = 1; i <= 8; i++) {
-        final ref = _firestore.collection('pertemuan').doc();
-        final pertemuan = PertemuanModel(
-          id: ref.id,
-          jadwalId: jadwal.id,
-          kelasId: kelas.id,
-          kelasNama: kelas.namaKelas,
-          matakuliahId: kelas.matakuliahId,
-          matakuliahNama: kelas.matakuliahNama,
-          matakuliahKode: kelas.matakuliahKode,
-          jenisSesi: 'praktikum',
-          pertemuanKe: i,
-          tanggal: '',
-          topik: 'Praktikum Pertemuan $i',
-          status: 'belum',
-          qrCode: '',
-          isAbsensiOpen: false,
-          createdAt: Timestamp.now(),
-          updatedAt: Timestamp.now(),
-        );
-        batch.set(ref, {
-          ...pertemuan.toMap(),
-          'createdAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
+        if (!existingPertemuanKe.contains(i)) {
+          final ref = _firestore.collection('pertemuan').doc();
+          final pertemuan = PertemuanModel(
+            id: ref.id,
+            jadwalId: jadwal.id,
+            kelasId: kelas.id,
+            kelasNama: kelas.namaKelas,
+            matakuliahId: kelas.matakuliahId,
+            matakuliahNama: kelas.matakuliahNama,
+            matakuliahKode: kelas.matakuliahKode,
+            jenisSesi: 'praktikum',
+            pertemuanKe: i,
+            tanggal: '',
+            topik: 'Praktikum Pertemuan $i',
+            status: 'belum',
+            qrCode: '',
+            isAbsensiOpen: false,
+            createdAt: Timestamp.now(),
+            updatedAt: Timestamp.now(),
+          );
+          batch.set(ref, {
+            ...pertemuan.toMap(),
+            'createdAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+          hasNew = true;
+        }
       }
-      await batch.commit();
+
+      if (hasNew) {
+        await batch.commit();
+      }
       return true;
     } catch (e) {
       _errorMessage = e.toString();

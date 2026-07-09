@@ -43,11 +43,17 @@ class _AsdosDashboardPageState extends State<AsdosDashboardPage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_isInit) {
-      final auth = context.read<AuthProvider>();
-      if (auth.user != null) {
-        context.read<AsdosDashboardProvider>().loadAllData(auth.user!.uid);
-      }
       _isInit = true;
+      // Defer loadAllData() ke setelah frame build selesai agar
+      // notifyListeners() di dalam _setLoading() tidak dipanggil
+      // saat Flutter masih dalam proses membangun widget tree.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final auth = context.read<AuthProvider>();
+        if (auth.user != null) {
+          context.read<AsdosDashboardProvider>().loadAllData(auth.user!.uid);
+        }
+      });
     }
   }
 

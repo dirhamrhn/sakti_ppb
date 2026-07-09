@@ -795,9 +795,19 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
                     );
                   }
 
-                  final listPertemuan = snapshot.data!.docs
+                  final rawList = snapshot.data!.docs
                       .map((d) => PertemuanModel.fromMap(d.id, d.data()))
                       .toList();
+
+                  // Deduplicate by pertemuanKe to prevent duplicate meetings in UI
+                  final List<PertemuanModel> listPertemuan = [];
+                  final Set<int> seenPertemuanKe = {};
+                  for (final p in rawList) {
+                    if (!seenPertemuanKe.contains(p.pertemuanKe)) {
+                      seenPertemuanKe.add(p.pertemuanKe);
+                      listPertemuan.add(p);
+                    }
+                  }
                   listPertemuan.sort((a, b) => a.pertemuanKe.compareTo(b.pertemuanKe));
 
                   PertemuanModel? activeMeeting;

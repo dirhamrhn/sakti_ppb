@@ -372,14 +372,14 @@ class _AsdosMateriTabState extends State<_AsdosMateriTab> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      currentModul != null ? currentModul['judul'] : 'Belum Diunggah',
+                      currentModul != null ? (currentModul['judul'] ?? 'Belum Diunggah') : 'Belum Diunggah',
                       style: AppTextStyles.cardTitle.copyWith(
                         color: currentModul != null ? AppColors.textPrimary : AppColors.textDisabled,
                       ),
                     ),
                     if (currentModul != null && (currentModul['deskripsi'] ?? '').toString().isNotEmpty)
                       Text(
-                        currentModul['deskripsi'],
+                        currentModul['deskripsi'] ?? '',
                         style: AppTextStyles.cardSubtitle,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -389,6 +389,8 @@ class _AsdosMateriTabState extends State<_AsdosMateriTab> {
               ),
               const SizedBox(width: 12),
               Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   if (hasFile) ...[
                     IconButton(
@@ -399,14 +401,15 @@ class _AsdosMateriTabState extends State<_AsdosMateriTab> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => SaktiPdfViewerPage(
-                              title: 'Modul $modulKe: ${currentModul!['judul']}',
-                              pdfUrl: currentModul['fileUrl'],
+                              title: 'Modul $modulKe: ${currentModul!['judul'] ?? ''}',
+                              pdfUrl: currentModul['fileUrl'] ?? '',
                             ),
                           ),
                         );
                       },
                     ),
                     Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
                           icon: const Icon(Icons.edit_rounded, color: AppColors.warning, size: 20),
@@ -427,6 +430,7 @@ class _AsdosMateriTabState extends State<_AsdosMateriTab> {
                       label: const Text('Unggah', style: TextStyle(fontSize: 11)),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        minimumSize: const Size(80, 36),
                       ),
                     ),
                   ],
@@ -1103,10 +1107,65 @@ class _AsdosPertemuanTabState extends State<_AsdosPertemuanTab> {
 
     return ListView.separated(
       padding: const EdgeInsets.all(16),
-      itemCount: _pertemuanList.length,
+      itemCount: 8,
       separatorBuilder: (_, __) => const SizedBox(height: 10),
       itemBuilder: (context, idx) {
-        final p = _pertemuanList[idx];
+        final pertemuanKe = idx + 1;
+        
+        // Find the meeting for this number, deduplicating if there are multiples
+        PertemuanModel? p;
+        for (final item in _pertemuanList) {
+          if (item.pertemuanKe == pertemuanKe) {
+            p = item;
+            break;
+          }
+        }
+
+        if (p == null) {
+          // Render placeholder card
+          return Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Colors.grey.withOpacity(0.08),
+                child: Text(
+                  '$pertemuanKe',
+                  style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+                ),
+              ),
+              title: Text(
+                'Pertemuan $pertemuanKe',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textDisabled),
+              ),
+              subtitle: const Text(
+                'Belum diinisialisasi',
+                style: TextStyle(color: AppColors.textDisabled, fontSize: 11),
+              ),
+              trailing: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'Belum Mulai',
+                  style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 10),
+                ),
+              ),
+              onTap: () {
+                AppSnackbar.info(
+                  context,
+                  'Pertemuan ini belum diinisialisasi.',
+                );
+              },
+            ),
+          );
+        }
+
         final isBelumStr = p.status == 'belum';
 
         Color statusColor = Colors.grey;
@@ -1160,7 +1219,7 @@ class _AsdosPertemuanTabState extends State<_AsdosPertemuanTab> {
                     );
                   }
                 : () {
-                    _showAsdosAbsensiDetailSheet(context, p);
+                    _showAsdosAbsensiDetailSheet(context, p!);
                   },
           ),
         );

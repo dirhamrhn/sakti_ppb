@@ -588,7 +588,7 @@ class _MateriTabState extends State<_MateriTab> {
               MaterialPageRoute(
                 builder: (context) => SaktiPdfViewerPage(
                   title: 'Modul $modulKe: $title',
-                  pdfUrl: currentModul!['fileUrl'],
+                  pdfUrl: currentModul!['fileUrl'] ?? '',
                 ),
               ),
             );
