@@ -141,11 +141,15 @@ class _MahasiswaMatakuliahDetailPageState
               openedModulKeList: _openedModulKeList,
               onRefreshModul: _loadData,
             ),
-            _AbsensiTab(absensiList: _absensiList),
+            _AbsensiTab(
+              absensiList: _absensiList,
+              kelas: _kelas!,
+            ),
             _TugasTab(
               tugasList: _tugasList,
               kelasId: widget.kelasId,
               onRefresh: _loadData,
+              kelas: _kelas!,
             ),
             _NilaiTab(kelas: _kelas!),
           ],
@@ -686,79 +690,144 @@ class _MateriTabState extends State<_MateriTab> {
 
 // ─── Tab Absensi ──────────────────────────────────────────────────────────────
 
-class _AbsensiTab extends StatelessWidget {
+class _AbsensiTab extends StatefulWidget {
   final List<AbsensiModel> absensiList;
-  const _AbsensiTab({required this.absensiList});
+  final KelasModel kelas;
+
+  const _AbsensiTab({
+    required this.absensiList,
+    required this.kelas,
+  });
+
+  @override
+  State<_AbsensiTab> createState() => _AbsensiTabState();
+}
+
+class _AbsensiTabState extends State<_AbsensiTab> {
+  int _selectedSegment = 0; // 0: Teori, 1: Praktikum
 
   @override
   Widget build(BuildContext context) {
-    if (absensiList.isEmpty) {
-      return const EmptyStateWidget(
-        icon: Icons.how_to_reg_rounded,
-        title: 'Belum Ada Data Absensi',
-        description: 'Data absensi akan muncul setelah pertemuan.',
+    final bool hasPractical = widget.kelas.asdosIds.isNotEmpty;
+
+    List<AbsensiModel> filteredList = widget.absensiList;
+    if (hasPractical) {
+      if (_selectedSegment == 0) {
+        filteredList = widget.absensiList.where((a) => a.jenisSesi == 'teori').toList();
+      } else {
+        filteredList = widget.absensiList.where((a) => a.jenisSesi == 'praktikum').toList();
+      }
+    }
+
+    Widget buildBody() {
+      if (filteredList.isEmpty) {
+        return const EmptyStateWidget(
+          icon: Icons.how_to_reg_rounded,
+          title: 'Belum Ada Data Absensi',
+          description: 'Data absensi akan muncul setelah pertemuan.',
+        );
+      }
+
+      final hadir = filteredList.where((a) => a.isHadir).length;
+      final izin = filteredList.where((a) => a.isIzin).length;
+      final sakit = filteredList.where((a) => a.isSakit).length;
+      final alpha = filteredList.where((a) => a.isAlpha).length;
+      final persen = filteredList.isNotEmpty ? (hadir / filteredList.length * 100) : 0.0;
+
+      return Column(
+        children: [
+          // Summary header
+          Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF3B5BDB), Color(0xFF6741D9)],
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _AbsensiStat('Hadir', hadir, Colors.white),
+                    _AbsensiStat('Izin', izin, Colors.yellow.shade200),
+                    _AbsensiStat('Sakit', sakit, Colors.orange.shade200),
+                    _AbsensiStat('Alpha', alpha, Colors.red.shade200),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: LinearProgressIndicator(
+                    value: filteredList.isNotEmpty ? (hadir / filteredList.length) : 0.0,
+                    backgroundColor: Colors.white.withOpacity(0.25),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                    minHeight: 8,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Kehadiran: ${persen.toStringAsFixed(0)}%',
+                  style: AppTextStyles.bodySmall.copyWith(color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+
+          // List absensi
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+              itemCount: filteredList.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (_, i) {
+                final a = filteredList[i];
+                return _AbsensiItem(absensi: a);
+              },
+            ),
+          ),
+        ],
       );
     }
 
-    final hadir = absensiList.where((a) => a.isHadir).length;
-    final izin = absensiList.where((a) => a.isIzin).length;
-    final sakit = absensiList.where((a) => a.isSakit).length;
-    final alpha = absensiList.where((a) => a.isAlpha).length;
-    final persen = hadir / absensiList.length * 100;
+    if (!hasPractical) {
+      return buildBody();
+    }
 
     return Column(
       children: [
-        // Summary header
         Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF3B5BDB), Color(0xFF6741D9)],
-            ),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Column(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          color: AppColors.surface,
+          child: Row(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _AbsensiStat('Hadir', hadir, Colors.white),
-                  _AbsensiStat('Izin', izin, Colors.yellow.shade200),
-                  _AbsensiStat('Sakit', sakit, Colors.orange.shade200),
-                  _AbsensiStat('Alpha', alpha, Colors.red.shade200),
-                ],
-              ),
-              const SizedBox(height: 12),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: LinearProgressIndicator(
-                  value: hadir / absensiList.length,
-                  backgroundColor: Colors.white.withOpacity(0.25),
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                  minHeight: 8,
+              Expanded(
+                child: ChoiceChip(
+                  label: const Center(child: Text('Absensi Teori')),
+                  selected: _selectedSegment == 0,
+                  onSelected: (val) {
+                    if (val) setState(() => _selectedSegment = 0);
+                  },
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                'Kehadiran: ${persen.toStringAsFixed(0)}%',
-                style: AppTextStyles.bodySmall.copyWith(color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ChoiceChip(
+                  label: const Center(child: Text('Absensi Praktikum')),
+                  selected: _selectedSegment == 1,
+                  onSelected: (val) {
+                    if (val) setState(() => _selectedSegment = 1);
+                  },
+                ),
               ),
             ],
           ),
         ),
-
-        // List absensi
+        const Divider(height: 1),
         Expanded(
-          child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-            itemCount: absensiList.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (_, i) {
-              final a = absensiList[i];
-              return _AbsensiItem(absensi: a);
-            },
-          ),
+          child: buildBody(),
         ),
       ],
     );
@@ -889,163 +958,183 @@ class _AbsensiItem extends StatelessWidget {
 
 // ─── Tab Tugas ────────────────────────────────────────────────────────────────
 
-class _TugasTab extends StatelessWidget {
+class _TugasTab extends StatefulWidget {
   final List<TugasModel> tugasList;
   final String kelasId;
   final VoidCallback onRefresh;
+  final KelasModel kelas;
 
   const _TugasTab({
     required this.tugasList,
     required this.kelasId,
     required this.onRefresh,
+    required this.kelas,
   });
+
+  @override
+  State<_TugasTab> createState() => _TugasTabState();
+}
+
+class _TugasTabState extends State<_TugasTab> {
+  int _selectedSegment = 0; // 0: Teori, 1: Praktikum
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<MahasiswaDashboardProvider>();
+    final bool hasPractical = widget.kelas.asdosIds.isNotEmpty;
 
-    if (tugasList.isEmpty) {
-      return const EmptyStateWidget(
-        icon: Icons.assignment_outlined,
-        title: 'Belum Ada Tugas',
-        description: 'Belum ada tugas yang diberikan.',
-      );
+    List<TugasModel> filteredList = widget.tugasList;
+    if (hasPractical) {
+      if (_selectedSegment == 0) {
+        filteredList = widget.tugasList.where((t) => t.tipe == 'tugas').toList();
+      } else {
+        filteredList = widget.tugasList.where((t) => t.tipe == 'lp' || t.tipe == 'tp').toList();
+      }
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: tugasList.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (_, i) {
-        final tugas = tugasList[i];
-        final isSubmitted = provider.hasSubmitted(tugas.id);
-        final deadline = tugas.deadline.toDate();
-        final isOverdue = deadline.isBefore(DateTime.now());
-        final dayLeft = deadline.difference(DateTime.now()).inDays;
+    Widget buildList() {
+      if (filteredList.isEmpty) {
+        return const EmptyStateWidget(
+          icon: Icons.assignment_outlined,
+          title: 'Belum Ada Tugas',
+          description: 'Belum ada tugas yang diberikan.',
+        );
+      }
 
-        return GestureDetector(
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) =>
-                  MahasiswaTugasDetailPage(tugas: tugas, kelasId: kelasId),
-            ),
-          ).then((_) => onRefresh()),
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: isOverdue && !isSubmitted
-                    ? AppColors.error.withOpacity(0.3)
-                    : AppColors.border,
+      return ListView.separated(
+        padding: const EdgeInsets.all(16),
+        itemCount: filteredList.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 8),
+        itemBuilder: (_, i) {
+          final tugas = filteredList[i];
+          final isSubmitted = provider.hasSubmitted(tugas.id);
+          final deadline = tugas.deadline.toDate();
+          final isOverdue = deadline.isBefore(DateTime.now());
+          final dayLeft = deadline.difference(DateTime.now()).inDays;
+
+          return GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    MahasiswaTugasDetailPage(tugas: tugas, kelasId: widget.kelasId),
               ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: isSubmitted
-                            ? AppColors.successLight
-                            : isOverdue
-                            ? AppColors.errorLight
-                            : AppColors.warningLight,
-                        borderRadius: BorderRadius.circular(10),
+            ).then((_) => widget.onRefresh()),
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: isOverdue && !isSubmitted
+                      ? AppColors.error.withOpacity(0.3)
+                      : AppColors.border,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: isSubmitted
+                              ? AppColors.successLight
+                              : isOverdue
+                              ? AppColors.errorLight
+                              : AppColors.warningLight,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          isSubmitted
+                              ? Icons.check_circle_rounded
+                              : Icons.assignment_rounded,
+                          color: isSubmitted
+                              ? AppColors.success
+                              : isOverdue
+                              ? AppColors.error
+                              : AppColors.warning,
+                          size: 20,
+                        ),
                       ),
-                      child: Icon(
-                        isSubmitted
-                            ? Icons.check_circle_rounded
-                            : Icons.assignment_rounded,
-                        color: isSubmitted
-                            ? AppColors.success
-                            : isOverdue
-                            ? AppColors.error
-                            : AppColors.warning,
-                        size: 20,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(tugas.judul, style: AppTextStyles.cardTitle),
+                            Text(
+                              tugas.dosenNama,
+                              style: AppTextStyles.cardSubtitle,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        color: AppColors.textSecondary,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
                         children: [
-                          Text(tugas.judul, style: AppTextStyles.cardTitle),
+                          const Icon(
+                            Icons.calendar_today_rounded,
+                            size: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                          const SizedBox(width: 4),
                           Text(
-                            tugas.dosenNama,
-                            style: AppTextStyles.cardSubtitle,
+                            DateFormat('d MMM yyyy', 'id').format(deadline),
+                            style: AppTextStyles.labelSmall,
                           ),
                         ],
                       ),
-                    ),
-                    const Icon(
-                      Icons.chevron_right_rounded,
-                      color: AppColors.textSecondary,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.calendar_today_rounded,
-                          size: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          DateFormat('d MMM yyyy', 'id').format(deadline),
-                          style: AppTextStyles.labelSmall,
-                        ),
-                      ],
-                    ),
-                    if (isSubmitted)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.successLight,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          'Dikumpulkan',
-                          style: AppTextStyles.badge.copyWith(
-                            color: AppColors.success,
+                      if (isSubmitted)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
                           ),
-                        ),
-                      )
-                    else if (isOverdue)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.errorLight,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          'Terlambat',
-                          style: AppTextStyles.badge.copyWith(
-                            color: AppColors.error,
+                          decoration: BoxDecoration(
+                            color: AppColors.successLight,
+                            borderRadius: BorderRadius.circular(6),
                           ),
-                        ),
-                      )
-                    else
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
+                          child: Text(
+                            'Dikumpulkan',
+                            style: AppTextStyles.badge.copyWith(
+                              color: AppColors.success,
+                            ),
+                          ),
+                        )
+                      else if (isOverdue)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.errorLight,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'Terlambat',
+                            style: AppTextStyles.badge.copyWith(
+                              color: AppColors.error,
+                            ),
+                          ),
+                        )
+                      else
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
                         ),
                         decoration: BoxDecoration(
                           color: AppColors.warningLight,
@@ -1058,13 +1147,54 @@ class _TugasTab extends StatelessWidget {
                           ),
                         ),
                       ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
+          );
+        },
+      );
+    }
+
+    if (!hasPractical) {
+      return buildList();
+    }
+
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          color: AppColors.surface,
+          child: Row(
+            children: [
+              Expanded(
+                child: ChoiceChip(
+                  label: const Center(child: Text('Tugas Teori')),
+                  selected: _selectedSegment == 0,
+                  onSelected: (val) {
+                    if (val) setState(() => _selectedSegment = 0);
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ChoiceChip(
+                  label: const Center(child: Text('Tugas Praktikum')),
+                  selected: _selectedSegment == 1,
+                  onSelected: (val) {
+                    if (val) setState(() => _selectedSegment = 1);
+                  },
+                ),
+              ),
+            ],
           ),
-        );
-      },
+        ),
+        const Divider(height: 1),
+        Expanded(
+          child: buildList(),
+        ),
+      ],
     );
   }
 }
