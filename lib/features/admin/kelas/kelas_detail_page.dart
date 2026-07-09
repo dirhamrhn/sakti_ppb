@@ -178,7 +178,7 @@ class _KelasDetailPageState extends State<KelasDetailPage> {
     }
 
     return DefaultTabController(
-      length: 4,
+      length: _kelas!.jenisKelas == 'teori' ? 3 : 4,
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
@@ -196,7 +196,7 @@ class _KelasDetailPageState extends State<KelasDetailPage> {
               ).then((_) => _loadKelas()),
             ),
           ],
-          bottom: const TabBar(
+          bottom: TabBar(
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white60,
             indicatorColor: Colors.white,
@@ -204,10 +204,10 @@ class _KelasDetailPageState extends State<KelasDetailPage> {
             isScrollable: true,
             tabAlignment: TabAlignment.start,
             tabs: [
-              Tab(text: 'Mahasiswa'),
-              Tab(text: 'Asisten Dosen'),
-              Tab(text: 'Bobot Nilai'),
-              Tab(text: 'Fitur LMS'),
+              const Tab(text: 'Mahasiswa'),
+              if (_kelas!.jenisKelas != 'teori') const Tab(text: 'Asisten Dosen'),
+              const Tab(text: 'Bobot Nilai'),
+              const Tab(text: 'Fitur LMS'),
             ],
           ),
         ),
@@ -370,111 +370,112 @@ class _KelasDetailPageState extends State<KelasDetailPage> {
                       ),
                     ],
                   ),
-
+ 
                   // Tab Asdos
-                  Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: AppButton(
-                          label: 'Assign Asisten Dosen',
-                          icon: Icons.person_add_rounded,
-                          onPressed: _showAddAsdosDialog,
-                          height: 44,
+                  if (_kelas!.jenisKelas != 'teori')
+                    Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: AppButton(
+                            label: 'Assign Asisten Dosen',
+                            icon: Icons.person_add_rounded,
+                            onPressed: _showAddAsdosDialog,
+                            height: 44,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      Expanded(
-                        child: _kelas!.asdosIds.isEmpty
-                            ? const EmptyStateWidget(
-                                icon: Icons.people_rounded,
-                                title: 'Belum Ada Asisten Dosen',
-                                description:
-                                    'Tap tombol di atas untuk mengassign.',
-                              )
-                            : ListView.separated(
-                                padding: const EdgeInsets.fromLTRB(
-                                  16,
-                                  0,
-                                  16,
-                                  20,
-                                ),
-                                itemCount: _kelas!.asdosIds.length,
-                                separatorBuilder: (_, __) =>
-                                    const SizedBox(height: 8),
-                                itemBuilder: (_, i) => Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.surface,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: AppColors.border),
+                        const SizedBox(height: 12),
+                        Expanded(
+                          child: _kelas!.asdosIds.isEmpty
+                              ? const EmptyStateWidget(
+                                  icon: Icons.people_rounded,
+                                  title: 'Belum Ada Asisten Dosen',
+                                  description:
+                                      'Tap tombol di atas untuk mengassign.',
+                                )
+                              : ListView.separated(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    0,
+                                    16,
+                                    20,
                                   ),
-                                  child: Row(
-                                    children: [
-                                      CircleAvatar(
-                                        backgroundColor:
-                                            AppColors.secondaryContainer,
-                                        child: Text(
-                                          _kelas!.asdosNama[i].isNotEmpty
-                                              ? _kelas!.asdosNama[i][0]
-                                                    .toUpperCase()
-                                              : 'A',
-                                          style: AppTextStyles.titleSmall
-                                              .copyWith(
-                                                color: AppColors.secondary,
-                                              ),
+                                  itemCount: _kelas!.asdosIds.length,
+                                  separatorBuilder: (_, __) =>
+                                      const SizedBox(height: 8),
+                                  itemBuilder: (_, i) => Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surface,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: AppColors.border),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        CircleAvatar(
+                                          backgroundColor:
+                                              AppColors.secondaryContainer,
+                                          child: Text(
+                                            _kelas!.asdosNama[i].isNotEmpty
+                                                ? _kelas!.asdosNama[i][0]
+                                                      .toUpperCase()
+                                                : 'A',
+                                            style: AppTextStyles.titleSmall
+                                                .copyWith(
+                                                  color: AppColors.secondary,
+                                                ),
+                                          ),
                                         ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          _kelas!.asdosNama[i],
-                                          style: AppTextStyles.cardTitle,
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            _kelas!.asdosNama[i],
+                                            style: AppTextStyles.cardTitle,
+                                          ),
                                         ),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.remove_circle_rounded,
-                                          color: AppColors.error,
-                                        ),
-                                        onPressed: () => ConfirmDialog.show(
-                                          context,
-                                          title: 'Hapus Asisten Dosen',
-                                          message:
-                                              'Yakin ingin melepas ${_kelas!.asdosNama[i]} dari kelas ini?',
-                                          confirmLabel: 'Lepas',
-                                          isDanger: true,
-                                          onConfirm: () async {
-                                            try {
-                                              await KelasRepository.instance
-                                                  .removeAsdos(
-                                                    widget.kelasId,
-                                                    _kelas!.asdosIds[i],
-                                                    _kelas!.asdosNama[i],
-                                                  );
-                                              await _loadKelas();
-                                              if (!mounted) return;
-                                              AppSnackbar.success(
-                                                context,
-                                                'Asisten dosen dilepas.',
-                                              );
-                                            } catch (e) {
-                                              if (mounted)
-                                                AppSnackbar.error(
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.remove_circle_rounded,
+                                            color: AppColors.error,
+                                          ),
+                                          onPressed: () => ConfirmDialog.show(
+                                            context,
+                                            title: 'Hapus Asisten Dosen',
+                                            message:
+                                                'Yakin ingin melepas ${_kelas!.asdosNama[i]} dari kelas ini?',
+                                            confirmLabel: 'Lepas',
+                                            isDanger: true,
+                                            onConfirm: () async {
+                                              try {
+                                                await KelasRepository.instance
+                                                    .removeAsdos(
+                                                      widget.kelasId,
+                                                      _kelas!.asdosIds[i],
+                                                      _kelas!.asdosNama[i],
+                                                    );
+                                                await _loadKelas();
+                                                if (!mounted) return;
+                                                AppSnackbar.success(
                                                   context,
-                                                  'Gagal.',
+                                                  'Asisten dosen dilepas.',
                                                 );
-                                            }
-                                          },
+                                              } catch (e) {
+                                                if (mounted)
+                                                  AppSnackbar.error(
+                                                    context,
+                                                    'Gagal.',
+                                                  );
+                                              }
+                                            },
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ),
-                      ),
-                    ],
-                  ),
+                        ),
+                      ],
+                    ),
                   // ────────────────────────────────────────────
                   // Tab Bobot Nilai
                   // ────────────────────────────────────────────

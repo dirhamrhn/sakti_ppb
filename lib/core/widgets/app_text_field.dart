@@ -20,6 +20,7 @@ class AppTextField extends StatelessWidget {
   final VoidCallback? onTap;
   final String? helperText;
   final FocusNode? focusNode;
+  final String? prefixText;
 
   const AppTextField({
     super.key,
@@ -40,6 +41,7 @@ class AppTextField extends StatelessWidget {
     this.onTap,
     this.helperText,
     this.focusNode,
+    this.prefixText,
   });
 
   @override
@@ -62,6 +64,7 @@ class AppTextField extends StatelessWidget {
         labelText: label,
         hintText: hint,
         helperText: helperText,
+        prefixText: prefixText,
         prefixIcon: prefixIcon != null
             ? Icon(prefixIcon, size: 20, color: AppColors.textSecondary)
             : null,

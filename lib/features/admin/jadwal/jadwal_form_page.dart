@@ -364,12 +364,8 @@ class _JadwalFormPageState extends State<JadwalFormPage> {
                     setState(() {
                       _selectedKelas = v;
                       
-                      // Auto reset / set session type based on practical course existence
-                      final hasPraktikum = _selectedKelasHasPraktikum;
-                      if (!hasPraktikum) {
-                        _jenisSesi = 'teori';
-                        _totalPertemuan = 16;
-                      } else {
+                      if (v != null) {
+                        _jenisSesi = v.jenisKelas.isNotEmpty ? v.jenisKelas : 'teori';
                         if (_jenisSesi == 'praktikum') {
                           _totalPertemuan = 8;
                         } else {
@@ -721,15 +717,27 @@ class _JadwalFormPageState extends State<JadwalFormPage> {
   }
 
   Widget _jenisChip(String value, String label, IconData icon) {
-    final isPraktikumVal = value == 'praktikum';
-    final hasPraktikum = _selectedKelasHasPraktikum;
-    final disabled = isPraktikumVal && !hasPraktikum;
+    bool disabled = false;
+    if (_selectedKelas != null) {
+      disabled = (_selectedKelas!.jenisKelas.isNotEmpty ? _selectedKelas!.jenisKelas : 'teori') != value;
+    } else {
+      final isPraktikumVal = value == 'praktikum';
+      final hasPraktikum = _selectedKelasHasPraktikum;
+      disabled = isPraktikumVal && !hasPraktikum;
+    }
     final sel = _jenisSesi == value && !disabled;
     
     return GestureDetector(
       onTap: () {
         if (disabled) {
-          AppSnackbar.warning(context, 'Mata kuliah kelas ini tidak memiliki praktikum.');
+          if (_selectedKelas != null) {
+            AppSnackbar.warning(
+              context,
+              'Sesi harus sesuai dengan Jenis Kelas yang dipilih (${_selectedKelas!.jenisKelas == 'teori' ? 'Teori' : 'Praktikum'}).',
+            );
+          } else {
+            AppSnackbar.warning(context, 'Mata kuliah kelas ini tidak memiliki praktikum.');
+          }
           return;
         }
         setState(() {
@@ -767,7 +775,7 @@ class _JadwalFormPageState extends State<JadwalFormPage> {
             ),
             const SizedBox(height: 4),
             Text(
-              isPraktikumVal && !hasPraktikum ? 'Tidak memiliki praktikum' : label,
+              disabled && _selectedKelas == null ? 'Tidak memiliki praktikum' : label,
               style: AppTextStyles.labelMedium.copyWith(
                 color: disabled
                     ? Colors.grey

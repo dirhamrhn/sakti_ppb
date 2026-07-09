@@ -46,6 +46,7 @@ class _KelasFormPageState extends State<KelasFormPage> {
   List<AsdosModel> _selectedAsdosList = [];
   String _tahunAkademik = '2024/2025';
   int _semesterAktif = 1; // 1=Ganjil, 2=Genap
+  String _jenisKelas = 'teori'; // 'teori' or 'praktikum'
 
   static const List<String> _tahunList = [
     '2023/2024',
@@ -94,10 +95,17 @@ class _KelasFormPageState extends State<KelasFormPage> {
     try {
       _existing = await KelasRepository.instance.getById(widget.kelasId!);
       if (_existing != null && mounted) {
-        _namaKelasController.text = _existing!.namaKelas;
+        String suffix = _existing!.namaKelas;
+        if (suffix.startsWith('Kelas Teori ')) {
+          suffix = suffix.substring('Kelas Teori '.length);
+        } else if (suffix.startsWith('Kelas Praktikum ')) {
+          suffix = suffix.substring('Kelas Praktikum '.length);
+        }
+        _namaKelasController.text = suffix;
         _semesterController.text = _existing!.semesterNama;
         _kapasitasController.text = _existing!.kapasitas.toString();
         setState(() {
+          _jenisKelas = _existing!.jenisKelas.isNotEmpty ? _existing!.jenisKelas : 'teori';
           _selectedMatakuliah = _matakuliahList
               .where((m) => m.id == _existing!.matakuliahId)
               .firstOrNull;
@@ -128,23 +136,38 @@ class _KelasFormPageState extends State<KelasFormPage> {
       return;
     }
 
+    if (_jenisKelas == 'praktikum' && _selectedAsdosList.isEmpty) {
+      AppSnackbar.warning(context, 'Pilih minimal satu Asisten Dosen untuk Kelas Praktikum.');
+      return;
+    }
+
     final provider = context.read<KelasProvider>();
     bool success;
 
     final kapasitas = int.tryParse(_kapasitasController.text) ?? 40;
 
-    final hasPraktikum = _selectedMatakuliah!.hasPraktikum;
+    final suffix = _namaKelasController.text.trim().toUpperCase();
+    final fullNamaKelas = _jenisKelas == 'teori' ? 'Kelas Teori $suffix' : 'Kelas Praktikum $suffix';
+
+    final finalDosenId = _jenisKelas == 'teori'
+        ? (_selectedDosen?.uid ?? '')
+        : (_selectedMatakuliah?.dosenId ?? '');
+    final finalDosenNama = _jenisKelas == 'teori'
+        ? (_selectedDosen?.nama ?? '')
+        : (_selectedMatakuliah?.dosenNama ?? '');
+
+    final hasPraktikum = _jenisKelas == 'praktikum';
     final finalAsdosIds = hasPraktikum ? _selectedAsdosList.map((a) => a.uid).toList() : <String>[];
     final finalAsdosNama = hasPraktikum ? _selectedAsdosList.map((a) => a.nama).toList() : <String>[];
 
     if (_isEdit) {
       final updated = _existing!.copyWith(
-        namaKelas: _namaKelasController.text.trim().toUpperCase(),
+        namaKelas: fullNamaKelas,
         matakuliahId: _selectedMatakuliah!.id,
         matakuliahNama: _selectedMatakuliah!.nama,
         matakuliahKode: _selectedMatakuliah!.kode,
-        dosenId: _selectedDosen?.uid ?? '',
-        dosenNama: _selectedDosen?.nama ?? '',
+        dosenId: finalDosenId,
+        dosenNama: finalDosenNama,
         asdosIds: finalAsdosIds,
         asdosNama: finalAsdosNama,
         semesterNama: _semesterController.text.trim(),
@@ -152,17 +175,18 @@ class _KelasFormPageState extends State<KelasFormPage> {
         tahunAkademik: _tahunAkademik,
         semesterAktif: _semesterAktif,
         updatedAt: Timestamp.now(),
+        jenisKelas: _jenisKelas,
       );
       success = await provider.update(updated);
     } else {
       final model = KelasModel(
         id: '',
-        namaKelas: _namaKelasController.text.trim().toUpperCase(),
+        namaKelas: fullNamaKelas,
         matakuliahId: _selectedMatakuliah!.id,
         matakuliahNama: _selectedMatakuliah!.nama,
         matakuliahKode: _selectedMatakuliah!.kode,
-        dosenId: _selectedDosen?.uid ?? '',
-        dosenNama: _selectedDosen?.nama ?? '',
+        dosenId: finalDosenId,
+        dosenNama: finalDosenNama,
         asdosIds: finalAsdosIds,
         asdosNama: finalAsdosNama,
         semesterId: '',
@@ -174,6 +198,7 @@ class _KelasFormPageState extends State<KelasFormPage> {
         updatedAt: Timestamp.now(),
         tahunAkademik: _tahunAkademik,
         semesterAktif: _semesterAktif,
+        jenisKelas: _jenisKelas,
       );
       success = await provider.create(model);
     }
@@ -311,6 +336,47 @@ class _KelasFormPageState extends State<KelasFormPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // Pilih Jenis Kelas
+                      Text(
+                        'Jenis Kelas',
+                        style: AppTextStyles.labelLarge.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceVariant,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: DropdownButtonFormField<String>(
+                          isExpanded: true,
+                          value: _jenisKelas,
+                          disabledHint: Text(_jenisKelas == 'teori' ? 'Teori' : 'Praktikum'),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                          items: const [
+                            DropdownMenuItem(value: 'teori', child: Text('Teori')),
+                            DropdownMenuItem(value: 'praktikum', child: Text('Praktikum')),
+                          ],
+                          onChanged: _isEdit
+                              ? null
+                              : (v) {
+                                  setState(() {
+                                    _jenisKelas = v!;
+                                    _selectedDosen = null;
+                                    _selectedAsdosList = [];
+                                  });
+                                },
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
                       // Pilih Mata Kuliah
                       Text(
                         'Mata Kuliah',
@@ -370,17 +436,18 @@ class _KelasFormPageState extends State<KelasFormPage> {
                         ),
                       ),
                       const SizedBox(height: 16),
-
+ 
                       AppTextField(
                         controller: _namaKelasController,
-                        label: 'Nama Kelas',
+                        label: 'Akhiran Kelas',
                         hint: 'Contoh: A, B, Paralel 1',
+                        prefixText: _jenisKelas == 'teori' ? 'Kelas Teori ' : 'Kelas Praktikum ',
                         prefixIcon: Icons.class_rounded,
                         validator: (v) =>
                             v?.trim().isEmpty == true ? 'Wajib diisi' : null,
                       ),
                       const SizedBox(height: 16),
-
+ 
                       AppTextField(
                         controller: _semesterController,
                         label: 'Semester / Tahun Ajaran',
@@ -390,7 +457,7 @@ class _KelasFormPageState extends State<KelasFormPage> {
                             v?.trim().isEmpty == true ? 'Wajib diisi' : null,
                       ),
                       const SizedBox(height: 16),
-
+ 
                       AppTextField(
                         controller: _kapasitasController,
                         label: 'Kapasitas Mahasiswa',
@@ -404,52 +471,77 @@ class _KelasFormPageState extends State<KelasFormPage> {
                         },
                       ),
                       const SizedBox(height: 16),
-
-                      // Pilih Dosen
-                      Text(
-                        'Dosen Pengampu (Opsional)',
-                        style: AppTextStyles.labelLarge.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceVariant,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: DropdownButtonFormField<DosenModel?>(
-                          isExpanded: true,
-                          value: _selectedDosen,
-                          hint: const Text('Pilih dosen... (bisa diisi nanti)'),
-                          decoration: const InputDecoration(
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(vertical: 14),
+ 
+                      // Dosen Section (Teori vs Praktikum)
+                      if (_jenisKelas == 'teori') ...[
+                        Text(
+                          'Dosen Pengampu (Opsional)',
+                          style: AppTextStyles.labelLarge.copyWith(
+                            color: AppColors.textSecondary,
                           ),
-                          icon: const Icon(Icons.keyboard_arrow_down_rounded),
-                          items: [
-                            const DropdownMenuItem<DosenModel?>(
-                              value: null,
-                              child: Text('— Belum ditentukan —'),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceVariant,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: DropdownButtonFormField<DosenModel?>(
+                            isExpanded: true,
+                            value: _selectedDosen,
+                            hint: const Text('Pilih dosen... (bisa diisi nanti)'),
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(vertical: 14),
                             ),
-                            ..._dosenList.map(
-                              (d) => DropdownMenuItem<DosenModel?>(
-                                value: d,
-                                child: Text(
-                                  d.nama,
-                                  overflow: TextOverflow.ellipsis,
+                            icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                            items: [
+                              const DropdownMenuItem<DosenModel?>(
+                                value: null,
+                                child: Text('— Belum ditentukan —'),
+                              ),
+                              ..._dosenList.map(
+                                (d) => DropdownMenuItem<DosenModel?>(
+                                  value: d,
+                                  child: Text(
+                                    d.nama,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                          onChanged: (v) => setState(() => _selectedDosen = v),
+                            ],
+                            onChanged: (v) => setState(() => _selectedDosen = v),
+                          ),
                         ),
-                      ),
+                      ] else ...[
+                        Text(
+                          'Dosen Pengampu (Mata Kuliah)',
+                          style: AppTextStyles.labelLarge.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceVariant.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Text(
+                            _selectedMatakuliah?.dosenNama.isNotEmpty == true
+                                ? _selectedMatakuliah!.dosenNama
+                                : 'Belum ditentukan di Mata Kuliah',
+                            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                          ),
+                        ),
+                      ],
                       
-                      // Pilih Asisten Dosen (Hanya muncul jika matakuliah memiliki praktikum)
-                      if (_selectedMatakuliah != null && _selectedMatakuliah!.hasPraktikum) ...[
+                      // Pilih Asisten Dosen (Hanya muncul jika Kelas Praktikum)
+                      if (_jenisKelas == 'praktikum') ...[
                         const SizedBox(height: 16),
                         Text(
                           'Asisten Dosen (Asdos)',
@@ -480,7 +572,7 @@ class _KelasFormPageState extends State<KelasFormPage> {
                                 ),
                               ),
                               TextButton(
-                                onPressed: _showAsdosSelectionDialog,
+                                onPressed: _selectedMatakuliah == null ? null : _showAsdosSelectionDialog,
                                 child: const Text('Pilih'),
                               ),
                             ],

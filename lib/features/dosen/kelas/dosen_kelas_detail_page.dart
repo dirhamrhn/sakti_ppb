@@ -23,6 +23,7 @@ import '../../../../repositories/kelas_repository.dart';
 import '../../../../repositories/materi_repository.dart';
 import '../../../../repositories/tugas_repository.dart';
 import 'dosen_tugas_detail_page.dart';
+import 'package:sakti_final/core/utils/formatter.dart';
 
 class DosenKelasDetailPage extends StatefulWidget {
   final String kelasId;
@@ -170,7 +171,7 @@ class _DosenKelasDetailPageState extends State<DosenKelasDetailPage>
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('${_kelas!.matakuliahNama} - Kelas ${_kelas!.namaKelas}'),
+        title: Text('${_kelas!.matakuliahNama} - ${ClassNameFormatter.format(_kelas!.namaKelas)}'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,

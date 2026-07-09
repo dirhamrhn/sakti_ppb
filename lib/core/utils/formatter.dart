@@ -45,3 +45,11 @@ class CourseFormatter {
     return code;
   }
 }
+
+class ClassNameFormatter {
+  static String format(String? name) {
+    if (name == null || name.isEmpty) return '';
+    if (name.startsWith('Kelas ')) return name;
+    return 'Kelas $name';
+  }
+}

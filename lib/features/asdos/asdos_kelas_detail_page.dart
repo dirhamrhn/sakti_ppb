@@ -80,7 +80,7 @@ class _AsdosKelasDetailPageState extends State<AsdosKelasDetailPage> with Single
               style: AppTextStyles.titleMedium.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
             ),
             Text(
-              'Kelas ${_kelas.namaKelas}  •  Sisi Asisten Dosen',
+              '${ClassNameFormatter.format(_kelas.namaKelas)}  •  Sisi Asisten Dosen',
               style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
             ),
           ],

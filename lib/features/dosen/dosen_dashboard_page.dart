@@ -334,7 +334,7 @@ class _DosenHomeTab extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 Text(
-                                  'Kelas ${j.kelasNama}  •  ${j.jamMulai} - ${j.jamSelesai}',
+                                  '${ClassNameFormatter.format(j.kelasNama)}  •  ${j.jamMulai} - ${j.jamSelesai}',
                                   style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
                                 ),
                               ],
@@ -544,7 +544,7 @@ class _DosenMataKuliahTabState extends State<_DosenMataKuliahTab> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Kelas ${kelas.namaKelas}',
+                                        ClassNameFormatter.format(kelas.namaKelas),
                                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                                       ),
                                       const SizedBox(height: 2),

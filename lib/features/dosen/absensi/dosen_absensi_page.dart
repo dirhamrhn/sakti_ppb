@@ -10,6 +10,7 @@ import '../../../models/jadwal_model.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/dosen_dashboard_provider.dart';
 import 'dosen_absensi_bottom_sheet.dart';
+import 'package:sakti_final/core/utils/formatter.dart';
 
 class DosenAbsensiPage extends StatefulWidget {
   const DosenAbsensiPage({super.key});
@@ -210,7 +211,7 @@ class _DosenJadwalCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Kelas ${jadwal.kelasNama}  •  $typeLabel',
+                    '${ClassNameFormatter.format(jadwal.kelasNama)}  •  $typeLabel',
                     style: AppTextStyles.cardSubtitle.copyWith(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 2),

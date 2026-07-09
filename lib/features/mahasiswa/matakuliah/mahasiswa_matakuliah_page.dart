@@ -9,12 +9,23 @@ import '../../../../providers/mahasiswa_dashboard_provider.dart';
 import 'mahasiswa_matakuliah_detail_page.dart';
 import 'package:sakti_final/core/utils/formatter.dart';
 
-class MahasiswaMatakuliahPage extends StatelessWidget {
+class MahasiswaMatakuliahPage extends StatefulWidget {
   const MahasiswaMatakuliahPage({super.key});
+
+  @override
+  State<MahasiswaMatakuliahPage> createState() => _MahasiswaMatakuliahPageState();
+}
+
+class _MahasiswaMatakuliahPageState extends State<MahasiswaMatakuliahPage> {
+  int _selectedSegment = 0; // 0: Teori, 1: Praktikum
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<MahasiswaDashboardProvider>();
+
+    final kelasTeori = provider.kelasList.where((k) => k.jenisKelas != 'praktikum').toList();
+    final kelasPraktikum = provider.kelasList.where((k) => k.jenisKelas == 'praktikum').toList();
+    final activeList = _selectedSegment == 0 ? kelasTeori : kelasPraktikum;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -27,34 +38,70 @@ class MahasiswaMatakuliahPage extends StatelessWidget {
       ),
       body: provider.isLoading && !provider.isInitialized
           ? const Center(child: CircularProgressIndicator())
-          : provider.kelasList.isEmpty
-          ? const EmptyStateWidget(
-              icon: Icons.book_outlined,
-              title: 'Belum Ada Mata Kuliah',
-              description: 'Anda belum terdaftar di kelas manapun.',
-            )
-          : RefreshIndicator(
-              onRefresh: provider.loadAll,
-              color: AppColors.primary,
-              child: ListView.separated(
-                padding: const EdgeInsets.all(20),
-                itemCount: provider.kelasList.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, i) {
-                  final kelas = provider.kelasList[i];
-                  return _MatakuliahCard(
-                    kelas: kelas,
-                    provider: provider,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            MahasiswaMatakuliahDetailPage(kelasId: kelas.id),
+          : Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  color: AppColors.surface,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: ChoiceChip(
+                          label: const Center(child: Text('Kelas Teori')),
+                          selected: _selectedSegment == 0,
+                          onSelected: (val) {
+                            if (val) setState(() => _selectedSegment = 0);
+                          },
+                        ),
                       ),
-                    ),
-                  );
-                },
-              ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ChoiceChip(
+                          label: const Center(child: Text('Kelas Praktikum')),
+                          selected: _selectedSegment == 1,
+                          onSelected: (val) {
+                            if (val) setState(() => _selectedSegment = 1);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                Expanded(
+                  child: activeList.isEmpty
+                      ? EmptyStateWidget(
+                          icon: _selectedSegment == 0 ? Icons.book_outlined : Icons.science_outlined,
+                          title: _selectedSegment == 0 ? 'Belum Ada Kelas Teori' : 'Belum Ada Kelas Praktikum',
+                          description: _selectedSegment == 0
+                              ? 'Anda belum terdaftar di kelas teori manapun.'
+                              : 'Anda belum terdaftar di kelas praktikum manapun.',
+                        )
+                      : RefreshIndicator(
+                          onRefresh: provider.loadAll,
+                          color: AppColors.primary,
+                          child: ListView.separated(
+                            padding: const EdgeInsets.all(20),
+                            itemCount: activeList.length,
+                            separatorBuilder: (_, __) => const SizedBox(height: 12),
+                            itemBuilder: (context, i) {
+                              final kelas = activeList[i];
+                              return _MatakuliahCard(
+                                kelas: kelas,
+                                provider: provider,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        MahasiswaMatakuliahDetailPage(kelasId: kelas.id),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                ),
+              ],
             ),
     );
   }
@@ -152,7 +199,7 @@ class _MatakuliahCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          CourseFormatter.getAbbreviation(kelas.matakuliahNama, kelas.matakuliahKode),
+                          '${CourseFormatter.getAbbreviation(kelas.matakuliahNama, kelas.matakuliahKode)} - ${ClassNameFormatter.format(kelas.namaKelas)}',
                           style: AppTextStyles.bodySmall.copyWith(
                             color: Colors.white.withOpacity(0.85),
                           ),
@@ -160,24 +207,54 @@ class _MatakuliahCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      kelas.status ? 'Aktif' : 'Nonaktif',
-                      style: AppTextStyles.badge.copyWith(color: Colors.white),
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: kelas.jenisKelas == 'praktikum'
+                              ? Colors.purpleAccent.withOpacity(0.3)
+                              : Colors.blueAccent.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: kelas.jenisKelas == 'praktikum'
+                                ? Colors.purpleAccent.withOpacity(0.6)
+                                : Colors.blueAccent.withOpacity(0.6),
+                          ),
+                        ),
+                        child: Text(
+                          kelas.jenisKelas == 'praktikum' ? 'Praktikum' : 'Teori',
+                          style: AppTextStyles.badge.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          kelas.status ? 'Aktif' : 'Nonaktif',
+                          style: AppTextStyles.badge.copyWith(color: Colors.white),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-
+ 
             // ── Info & Progress ──────────────────────────────
             Padding(
               padding: const EdgeInsets.all(14),

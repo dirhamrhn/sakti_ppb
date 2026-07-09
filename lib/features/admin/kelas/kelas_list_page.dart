@@ -9,6 +9,7 @@ import '../../../core/widgets/empty_state_widget.dart';
 import '../../../core/widgets/app_snackbar.dart';
 import '../../../models/kelas_model.dart';
 import '../../../providers/kelas_provider.dart';
+import 'package:sakti_final/core/utils/formatter.dart';
 
 class KelasListPage extends StatefulWidget {
   const KelasListPage({super.key});
@@ -212,7 +213,7 @@ class _KelasCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${kelas.matakuliahNama} - Kelas ${kelas.namaKelas}',
+                    '${kelas.matakuliahNama} - ${ClassNameFormatter.format(kelas.namaKelas)}',
                     style: AppTextStyles.cardTitle,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,

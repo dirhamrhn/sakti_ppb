@@ -41,10 +41,10 @@ class AsdosDashboardProvider extends ChangeNotifier {
   Future<void> loadAllData(String asdosUid) async {
     _setLoading(true);
     try {
-      // 1. Load assisted classes
       final classesSnap = await _firestore
           .collection('kelas')
           .where('asdosIds', arrayContains: asdosUid)
+          .where('jenisKelas', isEqualTo: 'praktikum')
           .get();
 
       _kelasList = classesSnap.docs

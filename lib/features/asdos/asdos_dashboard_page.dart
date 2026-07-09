@@ -363,7 +363,7 @@ class _AsdosHomeTab extends StatelessWidget {
                                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                                   ),
                                   Text(
-                                    'Kelas ${j.kelasNama}  •  ${j.jamMulai} - ${j.jamSelesai}',
+                                    '${ClassNameFormatter.format(j.kelasNama)}  •  ${j.jamMulai} - ${j.jamSelesai}',
                                     style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
                                   ),
                                 ],
@@ -424,7 +424,7 @@ class _AsdosHomeTab extends StatelessWidget {
                                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                               ),
                               Text(
-                                'Kelas ${nextSched.kelasNama}  •  ${nextSched.hari}, ${nextSched.jamMulai} - ${nextSched.jamSelesai}',
+                                '${ClassNameFormatter.format(nextSched.kelasNama)}  •  ${nextSched.hari}, ${nextSched.jamMulai} - ${nextSched.jamSelesai}',
                                 style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
                               ),
                             ],
@@ -568,7 +568,7 @@ class _AsdosMataKuliahTab extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: ListTile(
-                            title: Text('Kelas ${k.namaKelas}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                            title: Text(ClassNameFormatter.format(k.namaKelas), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                             subtitle: Text('Dosen Utama: ${k.dosenNama.isNotEmpty ? k.dosenNama : "-"}', style: const TextStyle(fontSize: 10)),
                             trailing: const Icon(Icons.chevron_right_rounded, size: 18),
                             onTap: () {

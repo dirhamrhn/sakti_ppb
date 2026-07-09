@@ -17,6 +17,7 @@ import '../../models/class_enrollment_model.dart';
 import '../../models/gedung_model.dart';
 import '../../providers/asdos_dashboard_provider.dart';
 import '../../providers/gedung_provider.dart';
+import 'package:sakti_final/core/utils/formatter.dart';
 
 class AsdosAbsensiBottomSheet extends StatefulWidget {
   final JadwalModel jadwal;
@@ -906,7 +907,7 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
                 const SizedBox(height: 12),
                 const Divider(),
                 const SizedBox(height: 12),
-                _buildInfoRow(Icons.class_rounded, 'Kelas', 'Kelas ${_currentJadwal.kelasNama}  •  Praktikum'),
+                _buildInfoRow(Icons.class_rounded, 'Kelas', '${ClassNameFormatter.format(_currentJadwal.kelasNama)}  •  Praktikum'),
                 _buildInfoRow(Icons.calendar_today_rounded, 'Waktu', '${_currentJadwal.hari}, ${_currentJadwal.jamMulai} - ${_currentJadwal.jamSelesai}'),
                 _buildInfoRow(
                   _currentJadwal.isOnline ? Icons.videocam_rounded : Icons.room_rounded,

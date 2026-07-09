@@ -19,6 +19,7 @@ class KelasModel {
   final bool status;
   final Timestamp createdAt;
   final Timestamp updatedAt;
+  final String jenisKelas;
 
   // ── Field Akademik Baru ────────────────────────────────────────
   /// Tahun akademik, contoh: "2024/2025"
@@ -63,6 +64,7 @@ class KelasModel {
     required this.status,
     required this.createdAt,
     required this.updatedAt,
+    this.jenisKelas = 'teori',
     this.tahunAkademik = '',
     this.semesterAktif = 1,
     this.bobotAbsensi = 10,
@@ -120,6 +122,7 @@ class KelasModel {
       fiturTugas: map['fiturTugas'] ?? true,
       fiturQuiz: map['fiturQuiz'] ?? false,
       fiturPengumuman: map['fiturPengumuman'] ?? true,
+      jenisKelas: map['jenisKelas'] ?? 'teori',
     );
   }
 
@@ -154,6 +157,7 @@ class KelasModel {
       'fiturTugas': fiturTugas,
       'fiturQuiz': fiturQuiz,
       'fiturPengumuman': fiturPengumuman,
+      'jenisKelas': jenisKelas,
     };
   }
 
@@ -188,6 +192,7 @@ class KelasModel {
     bool? fiturTugas,
     bool? fiturQuiz,
     bool? fiturPengumuman,
+    String? jenisKelas,
   }) {
     return KelasModel(
       id: id ?? this.id,
@@ -220,6 +225,7 @@ class KelasModel {
       fiturTugas: fiturTugas ?? this.fiturTugas,
       fiturQuiz: fiturQuiz ?? this.fiturQuiz,
       fiturPengumuman: fiturPengumuman ?? this.fiturPengumuman,
+      jenisKelas: jenisKelas ?? this.jenisKelas,
     );
   }
 

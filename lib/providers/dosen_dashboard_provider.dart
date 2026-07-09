@@ -66,6 +66,7 @@ class DosenDashboardProvider extends ChangeNotifier {
       final classesSnap = await _firestore
           .collection('kelas')
           .where('dosenId', isEqualTo: dosenUid)
+          .where('jenisKelas', isEqualTo: 'teori')
           .get();
 
       _kelasList = classesSnap.docs
@@ -76,7 +77,7 @@ class DosenDashboardProvider extends ChangeNotifier {
       // Mengambil seluruh matakuliah untuk pencocokan yang kokoh baik berdasarkan document ID maupun kode matakuliah
       _matakuliahMap = {};
       try {
-        final mkSnap = await _firestore.collection('matakuliah').get();
+        final mkSnap = await _firestore.collection('mata_kuliah').get();
         for (final doc in mkSnap.docs) {
           final mk = MatakuliahModel.fromMap(doc.id, doc.data());
           _matakuliahMap[doc.id] = mk;

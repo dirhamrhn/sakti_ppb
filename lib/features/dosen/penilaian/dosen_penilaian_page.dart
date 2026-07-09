@@ -374,7 +374,7 @@ class _DosenPenilaianPageState extends State<DosenPenilaianPage> {
                                 items: filteredClasses.map((k) {
                                   return DropdownMenuItem<KelasModel>(
                                     value: k,
-                                    child: Text('${k.matakuliahNama} - Kelas ${k.namaKelas}'),
+                                    child: Text('${k.matakuliahNama} - ${ClassNameFormatter.format(k.namaKelas)}'),
                                   );
                                 }).toList(),
                                 onChanged: (val) {
@@ -627,7 +627,7 @@ class _DosenPenilaianPageState extends State<DosenPenilaianPage> {
                               ),
                               child: const Icon(Icons.school_rounded, color: AppColors.primary, size: 18),
                             ),
-                            title: Text('Kelas ${k.namaKelas}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                            title: Text(ClassNameFormatter.format(k.namaKelas), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                             subtitle: Text('Tahun Akademik: ${k.tahunAkademik}', style: const TextStyle(fontSize: 11)),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -796,7 +796,7 @@ class _DosenKelasGradingPageState extends State<_DosenKelasGradingPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('${kelas.matakuliahNama} - Kelas ${kelas.namaKelas}'),
+        title: Text('${kelas.matakuliahNama} - ${ClassNameFormatter.format(kelas.namaKelas)}'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
@@ -1193,7 +1193,7 @@ class _DosenStudentGradingDetailPageState extends State<DosenStudentGradingDetai
                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                             ),
                             Text(
-                              'NIM. ${widget.student.mahasiswaNim}  •  Kelas ${kelas.namaKelas}',
+                              'NIM. ${widget.student.mahasiswaNim}  •  ${ClassNameFormatter.format(kelas.namaKelas)}',
                               style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                             ),
                           ],

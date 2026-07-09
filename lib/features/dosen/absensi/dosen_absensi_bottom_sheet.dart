@@ -16,6 +16,7 @@ import '../../../models/class_enrollment_model.dart';
 import '../../../models/gedung_model.dart';
 import '../../../providers/dosen_dashboard_provider.dart';
 import '../../../providers/gedung_provider.dart';
+import 'package:sakti_final/core/utils/formatter.dart';
 
 class DosenAbsensiBottomSheet extends StatefulWidget {
   final JadwalModel jadwal;
@@ -782,7 +783,7 @@ class _DosenAbsensiBottomSheetState extends State<DosenAbsensiBottomSheet> with 
                 const SizedBox(height: 12),
                 const Divider(),
                 const SizedBox(height: 12),
-                _buildInfoRow(Icons.class_rounded, 'Kelas', 'Kelas ${_currentJadwal.kelasNama}  •  $typeLabel'),
+                _buildInfoRow(Icons.class_rounded, 'Kelas', '${ClassNameFormatter.format(_currentJadwal.kelasNama)}  •  $typeLabel'),
                 _buildInfoRow(Icons.calendar_today_rounded, 'Waktu', '${_currentJadwal.hari}, ${_currentJadwal.jamMulai} - ${_currentJadwal.jamSelesai}'),
                 _buildInfoRow(
                   _currentJadwal.isOnline ? Icons.videocam_rounded : Icons.room_rounded,
