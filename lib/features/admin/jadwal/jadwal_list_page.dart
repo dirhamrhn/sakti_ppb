@@ -10,6 +10,7 @@ import '../../../core/widgets/app_snackbar.dart';
 import '../../../models/jadwal_model.dart';
 import '../../../providers/jadwal_provider.dart';
 import '../../../repositories/jadwal_repository.dart';
+import 'package:sakti_final/core/utils/formatter.dart';
 
 class JadwalListPage extends StatefulWidget {
   const JadwalListPage({super.key});
@@ -296,7 +297,7 @@ class _JadwalCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${jadwal.matakuliahKode} — ${jadwal.matakuliahNama}',
+                    '${CourseFormatter.getAbbreviation(jadwal.matakuliahNama, jadwal.matakuliahKode)} — ${jadwal.matakuliahNama}',
                     style: AppTextStyles.cardTitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

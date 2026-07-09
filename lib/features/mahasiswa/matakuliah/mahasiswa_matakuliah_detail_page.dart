@@ -16,6 +16,7 @@ import '../../../../providers/auth_provider.dart';
 import '../../../../repositories/kelas_repository.dart';
 import '../tugas/mahasiswa_tugas_detail_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:sakti_final/core/utils/formatter.dart';
 
 class MahasiswaMatakuliahDetailPage extends StatefulWidget {
   final String kelasId;
@@ -188,7 +189,7 @@ class _InfoTab extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  kelas.matakuliahKode,
+                  CourseFormatter.getAbbreviation(kelas.matakuliahNama, kelas.matakuliahKode),
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: Colors.white.withOpacity(0.8),
                   ),
@@ -380,63 +381,86 @@ class _MateriTabState extends State<_MateriTab> {
       padding: const EdgeInsets.all(16),
       itemCount: widget.materiList.length,
       separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (_, i) {
+      itemBuilder: (context, i) {
         final m = widget.materiList[i];
-        return Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Center(
-                  child: Text(
-                    '${m.pertemuanKe}',
-                    style: AppTextStyles.titleSmall.copyWith(
-                      color: AppColors.primary,
-                    ),
+        final bool hasFile = m.fileUrl.isNotEmpty;
+
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              if (!hasFile) {
+                AppSnackbar.warning(context, 'Materi belum diunggah oleh Dosen.');
+                return;
+              }
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SaktiPdfViewerPage(
+                    title: 'Pertemuan ${m.pertemuanKe}: ${m.topik}',
+                    pdfUrl: m.fileUrl,
                   ),
                 ),
+              );
+            },
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.border),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Pertemuan ${m.pertemuanKe}: ${m.topik}',
-                      style: AppTextStyles.cardTitle,
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryContainer,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    if (m.deskripsi.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        m.deskripsi,
-                        style: AppTextStyles.cardSubtitle,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                    child: Center(
+                      child: Text(
+                        '${m.pertemuanKe}',
+                        style: AppTextStyles.titleSmall.copyWith(
+                          color: AppColors.primary,
+                        ),
                       ),
-                    ],
-                    if (m.tanggal.isNotEmpty)
-                      Text(m.tanggal, style: AppTextStyles.labelSmall),
-                  ],
-                ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Pertemuan ${m.pertemuanKe}: ${m.topik}',
+                          style: AppTextStyles.cardTitle,
+                        ),
+                        if (m.deskripsi.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            m.deskripsi,
+                            style: AppTextStyles.cardSubtitle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                        if (m.tanggal.isNotEmpty)
+                          Text(m.tanggal, style: AppTextStyles.labelSmall),
+                      ],
+                    ),
+                  ),
+                  if (hasFile)
+                    const Icon(
+                      Icons.visibility_rounded,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
+                ],
               ),
-              if (m.fileUrl.isNotEmpty)
-                const Icon(
-                  Icons.attach_file_rounded,
-                  color: AppColors.primary,
-                  size: 20,
-                ),
-            ],
+            ),
           ),
         );
       },
@@ -461,7 +485,7 @@ class _MateriTabState extends State<_MateriTab> {
 
         final bool isUnlocked = modulKe == 1 || widget.openedModulKeList.contains(modulKe - 1);
         final bool isCompleted = widget.openedModulKeList.contains(modulKe);
-        final bool hasFile = currentModul != null && (currentModul['fileUrl'] as String).isNotEmpty;
+        final bool hasFile = currentModul != null && (currentModul['fileUrl'] ?? '').toString().isNotEmpty;
 
         Color cardColor = AppColors.surface;
         Color accentColor = AppColors.textSecondary;
@@ -540,11 +564,11 @@ class _MateriTabState extends State<_MateriTab> {
           );
         }
 
-        final title = currentModul != null && (currentModul['judul'] as String).isNotEmpty
+        final title = currentModul != null && (currentModul['judul'] ?? '').toString().isNotEmpty
             ? currentModul['judul']
             : 'Modul Praktikum $modulKe';
 
-        final desc = currentModul != null && (currentModul['deskripsi'] as String).isNotEmpty
+        final desc = currentModul != null && (currentModul['deskripsi'] ?? '').toString().isNotEmpty
             ? currentModul['deskripsi']
             : 'Materi praktikum untuk Modul $modulKe.';
 

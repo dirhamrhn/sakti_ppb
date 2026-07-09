@@ -13,6 +13,7 @@ import '../../../../core/widgets/app_text_field.dart';
 import '../../../../models/tugas_model.dart';
 import '../../../../providers/mahasiswa_dashboard_provider.dart';
 import '../../../../providers/auth_provider.dart';
+import 'package:sakti_final/core/utils/formatter.dart';
 
 class MahasiswaTugasDetailPage extends StatefulWidget {
   final TugasModel tugas;
@@ -232,7 +233,7 @@ class _MahasiswaTugasDetailPageState extends State<MahasiswaTugasDetailPage> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      tugas.matakuliahKode,
+                      CourseFormatter.getAbbreviation(tugas.matakuliahNama, tugas.matakuliahKode),
                       style: AppTextStyles.badge.copyWith(color: Colors.white),
                     ),
                   ),

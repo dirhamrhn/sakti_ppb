@@ -7,6 +7,7 @@ import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../models/kelas_model.dart';
 import '../../../../providers/mahasiswa_dashboard_provider.dart';
 import 'mahasiswa_matakuliah_detail_page.dart';
+import 'package:sakti_final/core/utils/formatter.dart';
 
 class MahasiswaMatakuliahPage extends StatelessWidget {
   const MahasiswaMatakuliahPage({super.key});
@@ -151,7 +152,7 @@ class _MatakuliahCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          kelas.matakuliahKode,
+                          CourseFormatter.getAbbreviation(kelas.matakuliahNama, kelas.matakuliahKode),
                           style: AppTextStyles.bodySmall.copyWith(
                             color: Colors.white.withOpacity(0.85),
                           ),

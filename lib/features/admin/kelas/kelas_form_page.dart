@@ -16,6 +16,7 @@ import '../../../providers/kelas_provider.dart';
 import '../../../repositories/kelas_repository.dart';
 import '../../../repositories/matakuliah_repository.dart';
 import '../../../repositories/user_repository.dart';
+import 'package:sakti_final/core/utils/formatter.dart';
 
 class KelasFormPage extends StatefulWidget {
   final String? kelasId;
@@ -339,7 +340,7 @@ class _KelasFormPageState extends State<KelasFormPage> {
                                 (m) => DropdownMenuItem<MatakuliahModel>(
                                   value: m,
                                   child: Text(
-                                    '${m.kode} - ${m.nama}',
+                                    '${CourseFormatter.getAbbreviation(m.nama, m.kode)} - ${m.nama}',
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),

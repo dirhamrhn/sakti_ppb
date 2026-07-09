@@ -8,6 +8,7 @@ import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../models/tugas_model.dart';
 import '../../../../providers/mahasiswa_dashboard_provider.dart';
 import 'mahasiswa_tugas_detail_page.dart';
+import 'package:sakti_final/core/utils/formatter.dart';
 
 class MahasiswaTugasPage extends StatefulWidget {
   const MahasiswaTugasPage({super.key});
@@ -517,7 +518,7 @@ class _TugasListCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    '${tugas.matakuliahKode} • ${tugas.kelasNama}',
+                    '${CourseFormatter.getAbbreviation(tugas.matakuliahNama, tugas.matakuliahKode)} • ${tugas.kelasNama}',
                     style: AppTextStyles.labelMedium.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w600,

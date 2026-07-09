@@ -74,14 +74,14 @@ class MahasiswaDashboardProvider extends ChangeNotifier {
     return _jadwalList.where((j) => j.hari == hariIni).toList();
   }
 
-  /// Tugas mendekati deadline (7 hari ke depan)
+  /// Tugas mendekati deadline (yang belum dikumpulkan, diurutkan dari yang paling dekat)
   List<TugasModel> get tugasDeadlineDekat {
     final now = DateTime.now();
-    final batas = now.add(const Duration(days: 7));
     return _tugasList.where((t) {
       final dl = t.deadline.toDate();
-      return dl.isAfter(now) && dl.isBefore(batas);
-    }).toList()..sort((a, b) => a.deadline.compareTo(b.deadline));
+      return dl.isAfter(now) && !hasSubmitted(t.id);
+    }).toList()
+      ..sort((a, b) => a.deadline.compareTo(b.deadline));
   }
 
   /// Notifikasi belum dibaca

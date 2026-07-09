@@ -17,6 +17,18 @@ class SupabaseStorageService {
     required File file,
     required String path,
   }) async {
+    // Proactively try to create the bucket if it doesn't exist
+    try {
+      await _client.storage.createBucket(
+        SupabaseConfig.bucket,
+        const BucketOptions(
+          public: true,
+        ),
+      );
+    } catch (_) {
+      // Ignore error if bucket already exists or no permission
+    }
+
     await _client.storage
         .from(SupabaseConfig.bucket)
         .upload(

@@ -20,6 +20,7 @@ import '../../../providers/gedung_provider.dart';
 import '../../../repositories/jadwal_repository.dart';
 import '../../../repositories/matakuliah_repository.dart';
 import 'map_picker_page.dart';
+import 'package:sakti_final/core/utils/formatter.dart';
 
 class JadwalFormPage extends StatefulWidget {
   final String? jadwalId;
@@ -353,7 +354,7 @@ class _JadwalFormPageState extends State<JadwalFormPage> {
                       (k) => DropdownMenuItem<KelasModel?>(
                         value: k,
                         child: Text(
-                          '${k.matakuliahKode} - ${k.namaKelas}',
+                          '${CourseFormatter.getAbbreviation(k.matakuliahNama, k.matakuliahKode)} - ${k.namaKelas}',
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),

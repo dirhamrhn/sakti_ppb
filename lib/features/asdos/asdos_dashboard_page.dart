@@ -23,6 +23,7 @@ import '../../models/class_enrollment_model.dart';
 import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/asdos_dashboard_provider.dart';
+import 'package:sakti_final/core/utils/formatter.dart';
 import '../../repositories/storage_repository.dart';
 import 'asdos_kelas_detail_page.dart';
 import 'asdos_absensi_bottom_sheet.dart';
@@ -492,7 +493,7 @@ class _AsdosMataKuliahTab extends StatelessWidget {
   Map<String, List<KelasModel>> _groupClasses(List<KelasModel> list) {
     final Map<String, List<KelasModel>> map = {};
     for (final k in list) {
-      final key = '${k.matakuliahKode} - ${k.matakuliahNama}';
+      final key = '${CourseFormatter.getAbbreviation(k.matakuliahNama, k.matakuliahKode)} - ${k.matakuliahNama}';
       if (!map.containsKey(key)) {
         map[key] = [];
       }

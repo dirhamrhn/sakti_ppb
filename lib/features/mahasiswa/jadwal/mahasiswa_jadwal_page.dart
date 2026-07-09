@@ -6,6 +6,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../models/jadwal_model.dart';
 import '../../../../providers/mahasiswa_dashboard_provider.dart';
+import 'package:sakti_final/core/utils/formatter.dart';
 
 class MahasiswaJadwalPage extends StatelessWidget {
   const MahasiswaJadwalPage({super.key});
@@ -268,7 +269,7 @@ class _JadwalCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              jadwal.matakuliahKode,
+              CourseFormatter.getAbbreviation(jadwal.matakuliahNama, jadwal.matakuliahKode),
               style: AppTextStyles.badge.copyWith(color: _color),
             ),
           ),

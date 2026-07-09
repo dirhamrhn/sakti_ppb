@@ -13,6 +13,7 @@ import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../models/jadwal_model.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../../providers/mahasiswa_dashboard_provider.dart';
+import 'package:sakti_final/core/utils/formatter.dart';
 
 class MahasiswaAbsensiPage extends StatefulWidget {
   const MahasiswaAbsensiPage({super.key});
@@ -651,7 +652,7 @@ class _MahasiswaAbsensiPageState extends State<MahasiswaAbsensiPage> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                jadwal.matakuliahKode,
+                CourseFormatter.getAbbreviation(jadwal.matakuliahNama, jadwal.matakuliahKode),
                 style: AppTextStyles.badge.copyWith(
                   color: AppColors.primary,
                   fontWeight: FontWeight.bold,

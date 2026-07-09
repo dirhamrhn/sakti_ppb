@@ -14,6 +14,7 @@ import '../../../models/matakuliah_model.dart';
 import '../../../models/class_enrollment_model.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/dosen_dashboard_provider.dart';
+import 'package:sakti_final/core/utils/formatter.dart';
 
 class DosenPenilaianPage extends StatefulWidget {
   const DosenPenilaianPage({super.key});
@@ -234,7 +235,7 @@ class _DosenPenilaianPageState extends State<DosenPenilaianPage> {
     // Grouping classes by Course Name
     final Map<String, List<KelasModel>> groupedClasses = {};
     for (final k in filteredClasses) {
-      final key = '${k.matakuliahKode} - ${k.matakuliahNama}';
+      final key = '${CourseFormatter.getAbbreviation(k.matakuliahNama, k.matakuliahKode)} - ${k.matakuliahNama}';
       if (!groupedClasses.containsKey(key)) {
         groupedClasses[key] = [];
       }

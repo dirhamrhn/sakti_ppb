@@ -212,7 +212,7 @@ class AbsensiModel {
     );
   }
 
-  bool get isHadir => status == 'hadir';
+  bool get isHadir => status == 'hadir' || status == 'terlambat';
   bool get isTerlambat => status == 'terlambat';
   bool get isIzin => status == 'izin';
   bool get isSakit => status == 'sakit';

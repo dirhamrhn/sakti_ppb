@@ -152,6 +152,33 @@ class DosenDashboardProvider extends ChangeNotifier {
       if (idx != -1) {
         _schedules[idx] = updatedJadwal;
       }
+
+      // 3. Kirim notifikasi ke semua mahasiswa terdaftar di kelas
+      try {
+        final enrollments = await getEnrollments(updatedJadwal.kelasId);
+        if (enrollments.isNotEmpty) {
+          final batch = _firestore.batch();
+          for (final enrollment in enrollments) {
+            final notifRef = _firestore.collection('notifications').doc();
+            final notif = NotifikasiModel(
+              id: notifRef.id,
+              userId: enrollment.mahasiswaId,
+              judul: 'Perubahan Jadwal Kuliah',
+              pesan: 'Jadwal kuliah ${updatedJadwal.matakuliahNama} (${updatedJadwal.jenisSesi == "praktikum" ? "Praktikum" : "Teori"}) diubah menjadi hari ${updatedJadwal.hari}, pukul ${updatedJadwal.jamMulai} - ${updatedJadwal.jamSelesai}.',
+              tipe: 'sistem',
+              referenceId: updatedJadwal.id,
+              isRead: false,
+              createdAt: Timestamp.now(),
+            );
+            batch.set(notifRef, notif.toMap());
+          }
+          await batch.commit();
+          debugPrint('DosenDashboardProvider: Berhasil mengirim notifikasi perubahan jadwal ke ${enrollments.length} mahasiswa.');
+        }
+      } catch (notifErr) {
+        debugPrint('DosenDashboardProvider: Gagal mengirim notifikasi perubahan jadwal: $notifErr');
+      }
+
       return true;
     } catch (e) {
       _errorMessage = e.toString();

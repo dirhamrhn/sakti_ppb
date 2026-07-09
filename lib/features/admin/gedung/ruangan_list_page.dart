@@ -75,7 +75,7 @@ class _RuanganListPageState extends State<RuanganListPage> {
             Navigator.pushNamed(
               context,
               RouteName.adminRuanganForm,
-              arguments: widget.gedung,
+              arguments: {'gedung': widget.gedung},
             ).then(
               (_) => context.read<GedungProvider>().loadRuanganByGedung(
                 widget.gedung.id,

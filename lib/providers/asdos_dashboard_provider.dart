@@ -124,6 +124,40 @@ class AsdosDashboardProvider extends ChangeNotifier {
         _schedules[idx] = updated;
         notifyListeners();
       }
+
+      // Kirim notifikasi ke semua mahasiswa terdaftar di kelas
+      try {
+        final snap = await _firestore
+            .collection('class_enrollments')
+            .where('kelasId', isEqualTo: updated.kelasId)
+            .get();
+        final enrollments = snap.docs
+            .map((d) => ClassEnrollmentModel.fromMap(d.id, d.data()))
+            .toList();
+            
+        if (enrollments.isNotEmpty) {
+          final batch = _firestore.batch();
+          for (final enrollment in enrollments) {
+            final notifRef = _firestore.collection('notifications').doc();
+            final notif = NotifikasiModel(
+              id: notifRef.id,
+              userId: enrollment.mahasiswaId,
+              judul: 'Perubahan Jadwal Kuliah',
+              pesan: 'Jadwal kuliah ${updated.matakuliahNama} (${updated.jenisSesi == "praktikum" ? "Praktikum" : "Teori"}) diubah menjadi hari ${updated.hari}, pukul ${updated.jamMulai} - ${updated.jamSelesai}.',
+              tipe: 'sistem',
+              referenceId: updated.id,
+              isRead: false,
+              createdAt: Timestamp.now(),
+            );
+            batch.set(notifRef, notif.toMap());
+          }
+          await batch.commit();
+          debugPrint('AsdosDashboardProvider: Berhasil mengirim notifikasi perubahan jadwal ke ${enrollments.length} mahasiswa.');
+        }
+      } catch (notifErr) {
+        debugPrint('AsdosDashboardProvider: Gagal mengirim notifikasi perubahan jadwal: $notifErr');
+      }
+
       return true;
     } catch (e) {
       _errorMessage = e.toString();

@@ -12,6 +12,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../models/jadwal_model.dart';
 import '../../../../models/tugas_model.dart';
 import '../matakuliah/mahasiswa_matakuliah_page.dart';
+import 'package:sakti_final/core/utils/formatter.dart';
 
 class MahasiswaDashboardPage extends StatelessWidget {
   const MahasiswaDashboardPage({super.key});
@@ -223,7 +224,7 @@ class _DashboardContent extends StatelessWidget {
           provider.tugasDeadlineDekat.isEmpty
               ? const _EmptyCard(
                   icon: Icons.task_alt_rounded,
-                  message: 'Tidak ada deadline dalam 7 hari',
+                  message: 'Tidak ada deadline tugas aktif',
                 )
               : Column(
                   children: provider.tugasDeadlineDekat
@@ -369,7 +370,7 @@ class _JadwalCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              jadwal.matakuliahKode,
+              CourseFormatter.getAbbreviation(jadwal.matakuliahNama, jadwal.matakuliahKode),
               style: AppTextStyles.badge.copyWith(color: AppColors.primary),
             ),
           ),

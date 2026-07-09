@@ -6,6 +6,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../models/nilai_model.dart';
 import '../../../../providers/mahasiswa_dashboard_provider.dart';
+import 'package:sakti_final/core/utils/formatter.dart';
 
 class MahasiswaNilaiPage extends StatefulWidget {
   const MahasiswaNilaiPage({super.key});
@@ -261,7 +262,7 @@ class _NilaiCard extends StatelessWidget {
                 Text(nilai.matakuliahNama, style: AppTextStyles.cardTitle),
                 const SizedBox(height: 2),
                 Text(
-                  '${nilai.matakuliahKode} • ${nilai.sks} SKS',
+                  '${CourseFormatter.getAbbreviation(nilai.matakuliahNama, nilai.matakuliahKode)} • ${nilai.sks} SKS',
                   style: AppTextStyles.cardSubtitle,
                 ),
                 const SizedBox(height: 6),

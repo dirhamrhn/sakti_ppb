@@ -15,6 +15,7 @@ import '../../../providers/kelas_provider.dart';
 import '../../../repositories/kelas_repository.dart';
 import '../../../repositories/user_repository.dart';
 import '../../../repositories/matakuliah_repository.dart';
+import 'package:sakti_final/core/utils/formatter.dart';
 
 class KelasDetailPage extends StatefulWidget {
   final String kelasId;
@@ -181,7 +182,7 @@ class _KelasDetailPageState extends State<KelasDetailPage> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
-          title: Text('${_kelas!.matakuliahKode} - ${_kelas!.namaKelas}'),
+          title: Text('${CourseFormatter.getAbbreviation(_kelas!.matakuliahNama, _kelas!.matakuliahKode)} - ${_kelas!.namaKelas}'),
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           elevation: 0,

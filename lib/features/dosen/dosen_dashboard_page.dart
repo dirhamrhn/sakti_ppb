@@ -12,6 +12,7 @@ import '../../../models/jadwal_model.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/dosen_dashboard_provider.dart';
 import 'absensi/dosen_absensi_page.dart';
+import 'package:sakti_final/core/utils/formatter.dart';
 import 'penilaian/dosen_penilaian_page.dart';
 
 class DosenDashboardPage extends StatefulWidget {
@@ -483,7 +484,7 @@ class _DosenMataKuliahTabState extends State<_DosenMataKuliahTab> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'Kode: $courseCode  •  ${classes.length} Kelas Terdaftar',
+                                'Kode: ${CourseFormatter.getAbbreviation(sampleKelas.matakuliahNama, courseCode)}  •  ${classes.length} Kelas Terdaftar',
                                 style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                               ),
                             ],

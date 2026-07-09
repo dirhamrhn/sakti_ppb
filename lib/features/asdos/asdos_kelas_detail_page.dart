@@ -22,6 +22,7 @@ import '../../models/class_enrollment_model.dart';
 import '../../providers/asdos_dashboard_provider.dart';
 import '../../providers/auth_provider.dart';
 import 'asdos_review_submisi_page.dart';
+import 'package:sakti_final/core/utils/formatter.dart';
 
 class AsdosKelasDetailPage extends StatefulWidget {
   final KelasModel kelas;
@@ -336,7 +337,7 @@ class _AsdosMateriTabState extends State<_AsdosMateriTab> {
           }
         }
 
-        final bool hasFile = currentModul != null && (currentModul['fileUrl'] as String).isNotEmpty;
+        final bool hasFile = currentModul != null && (currentModul['fileUrl'] ?? '').toString().isNotEmpty;
 
         return Container(
           padding: const EdgeInsets.all(16),
@@ -376,7 +377,7 @@ class _AsdosMateriTabState extends State<_AsdosMateriTab> {
                         color: currentModul != null ? AppColors.textPrimary : AppColors.textDisabled,
                       ),
                     ),
-                    if (currentModul != null && (currentModul['deskripsi'] as String).isNotEmpty)
+                    if (currentModul != null && (currentModul['deskripsi'] ?? '').toString().isNotEmpty)
                       Text(
                         currentModul['deskripsi'],
                         style: AppTextStyles.cardSubtitle,
@@ -1071,7 +1072,7 @@ class _AsdosPertemuanTabState extends State<_AsdosPertemuanTab> {
             setState(() => _isLoading = true);
             try {
               final schedSnap = await FirebaseFirestore.instance
-                  .collection('schedules')
+                  .collection('jadwal')
                   .where('kelasId', isEqualTo: widget.kelas.id)
                   .where('jenisSesi', isEqualTo: 'praktikum')
                   .get();
@@ -1493,7 +1494,7 @@ class _AsdosMahasiswaTabState extends State<_AsdosMahasiswaTab> {
             const SizedBox(height: 8),
             _buildProfileRow('Kelas', widget.kelas.namaKelas),
             _buildProfileRow('Mata Kuliah', widget.kelas.matakuliahNama),
-            _buildProfileRow('Kode MK', widget.kelas.matakuliahKode),
+            _buildProfileRow('Kode MK', CourseFormatter.getAbbreviation(widget.kelas.matakuliahNama, widget.kelas.matakuliahKode)),
             _buildProfileRow('Terdaftar pada', student.enrolledAt != null 
                 ? DateFormat('d MMMM yyyy', 'id').format(student.enrolledAt!.toDate())
                 : '-'),

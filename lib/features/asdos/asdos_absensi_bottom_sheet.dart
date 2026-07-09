@@ -32,6 +32,7 @@ class AsdosAbsensiBottomSheet extends StatefulWidget {
 
 class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  late JadwalModel _currentJadwal;
   final TextEditingController _topikController = TextEditingController();
   final FocusNode _topikFocusNode = FocusNode();
   List<ClassEnrollmentModel> _enrollments = [];
@@ -41,6 +42,7 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
   @override
   void initState() {
     super.initState();
+    _currentJadwal = widget.jadwal;
     _tabController = TabController(length: 2, vsync: this);
     _loadEnrollmentData();
   }
@@ -59,7 +61,7 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
       final db = FirebaseFirestore.instance;
       final snap = await db
           .collection('class_enrollments')
-          .where('kelasId', isEqualTo: widget.jadwal.kelasId)
+          .where('kelasId', isEqualTo: _currentJadwal.kelasId)
           .get();
 
       _enrollments = snap.docs
@@ -81,7 +83,7 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
 
   void _showUbahHariDialog(BuildContext context, AsdosDashboardProvider provider) {
     final days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
-    String selectedDay = widget.jadwal.hari;
+    String selectedDay = _currentJadwal.hari;
 
     showDialog(
       context: context,
@@ -105,9 +107,12 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
-              final updated = widget.jadwal.copyWith(hari: selectedDay);
+              final updated = _currentJadwal.copyWith(hari: selectedDay);
               final success = await provider.updateJadwal(updated);
               if (success && mounted) {
+                setState(() {
+                  _currentJadwal = updated;
+                });
                 AppSnackbar.success(context, 'Hari praktikum berhasil diubah.');
               }
             },
@@ -127,8 +132,8 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
       return const TimeOfDay(hour: 8, minute: 0);
     }
 
-    TimeOfDay start = parseTime(widget.jadwal.jamMulai);
-    TimeOfDay end = parseTime(widget.jadwal.jamSelesai);
+    TimeOfDay start = parseTime(_currentJadwal.jamMulai);
+    TimeOfDay end = parseTime(_currentJadwal.jamSelesai);
 
     showDialog(
       context: context,
@@ -177,12 +182,15 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
                 final startStr = '${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')}';
                 final endStr = '${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}';
                 
-                final updated = widget.jadwal.copyWith(
+                final updated = _currentJadwal.copyWith(
                   jamMulai: startStr,
                   jamSelesai: endStr,
                 );
                 final success = await provider.updateJadwal(updated);
                 if (success && mounted) {
+                  setState(() {
+                    _currentJadwal = updated;
+                  });
                   AppSnackbar.success(context, 'Waktu praktikum berhasil diubah.');
                 }
               },
@@ -198,13 +206,13 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
     final gProvider = context.read<GedungProvider>();
     gProvider.loadAllGedung();
 
-    String currentType = widget.jadwal.lokasiType;
+    String currentType = _currentJadwal.lokasiType;
     GedungModel? selectedGedung;
     RuanganModel? selectedRuangan;
-    String currentPlatform = widget.jadwal.platformMeet;
-    final TextEditingController linkController = TextEditingController(text: widget.jadwal.linkMeet);
-    final TextEditingController radiusController = TextEditingController(text: widget.jadwal.radiusAbsensi.toString());
-    final TextEditingController toleransiController = TextEditingController(text: widget.jadwal.toleransiMenit.toString());
+    String currentPlatform = _currentJadwal.platformMeet;
+    final TextEditingController linkController = TextEditingController(text: _currentJadwal.linkMeet);
+    final TextEditingController radiusController = TextEditingController(text: _currentJadwal.radiusAbsensi.toString());
+    final TextEditingController toleransiController = TextEditingController(text: _currentJadwal.toleransiMenit.toString());
 
     showDialog(
       context: context,
@@ -213,7 +221,7 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
           if (currentType == 'offline' && gProvider.gedungList.isNotEmpty && selectedGedung == null) {
             try {
               selectedGedung = gProvider.gedungList.firstWhere(
-                (g) => g.nama == widget.jadwal.gedungNama,
+                (g) => g.nama == _currentJadwal.gedungNama,
               );
               gProvider.loadRuanganByGedung(selectedGedung!.id);
             } catch (_) {}
@@ -328,12 +336,12 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
                   final toleransiVal = int.tryParse(toleransiController.text) ?? 15;
 
                   if (currentType == 'offline') {
-                    final gdName = selectedGedung?.nama ?? widget.jadwal.gedungNama;
-                    final ruName = selectedRuangan?.namaRuangan ?? widget.jadwal.ruanganNama;
+                    final gdName = selectedGedung?.nama ?? _currentJadwal.gedungNama;
+                    final ruName = selectedRuangan?.namaRuangan ?? _currentJadwal.ruanganNama;
                     final lat = selectedRuangan?.latitude ?? selectedGedung?.latitude ?? 0.0;
                     final lng = selectedRuangan?.longitude ?? selectedGedung?.longitude ?? 0.0;
 
-                    updated = widget.jadwal.copyWith(
+                    updated = _currentJadwal.copyWith(
                       lokasiType: 'offline',
                       gedungNama: gdName,
                       ruanganNama: ruName,
@@ -344,7 +352,7 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
                       toleransiMenit: toleransiVal,
                     );
                   } else {
-                    updated = widget.jadwal.copyWith(
+                    updated = _currentJadwal.copyWith(
                       lokasiType: 'online',
                       linkMeet: linkController.text,
                       platformMeet: currentPlatform,
@@ -363,6 +371,9 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
                   
                   final success = await provider.updateJadwal(updated);
                   if (success && mounted) {
+                    setState(() {
+                      _currentJadwal = updated;
+                    });
                     AppSnackbar.success(context, 'Konfigurasi praktikum berhasil diperbarui.');
                   }
                 },
@@ -376,7 +387,7 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
   }
 
   void _showMembatalkanPerkuliahanDialog(BuildContext context, AsdosDashboardProvider provider) {
-    final bool currentStatus = widget.jadwal.status;
+    final bool currentStatus = _currentJadwal.status;
     
     ConfirmDialog.show(
       context,
@@ -387,9 +398,12 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
       confirmLabel: currentStatus ? 'Batalkan' : 'Aktifkan',
       isDanger: currentStatus,
       onConfirm: () async {
-        final updated = widget.jadwal.copyWith(status: !currentStatus);
+        final updated = _currentJadwal.copyWith(status: !currentStatus);
         final success = await provider.updateJadwal(updated);
         if (success && mounted) {
+          setState(() {
+            _currentJadwal = updated;
+          });
           AppSnackbar.success(
             context, 
             currentStatus ? 'Praktikum hari ini telah dibatalkan.' : 'Praktikum diaktifkan kembali.',
@@ -417,9 +431,14 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
               title: const Text('Offline (Tatap Muka)'),
               onTap: () async {
                 Navigator.pop(context);
-                final updated = widget.jadwal.copyWith(lokasiType: 'offline', status: true);
-                await provider.updateJadwal(updated);
-                if (mounted) AppSnackbar.success(context, 'Status kelas praktikum diubah ke Offline.');
+                final updated = _currentJadwal.copyWith(lokasiType: 'offline', status: true);
+                final success = await provider.updateJadwal(updated);
+                if (success && mounted) {
+                  setState(() {
+                    _currentJadwal = updated;
+                  });
+                  AppSnackbar.success(context, 'Status kelas praktikum diubah ke Offline.');
+                }
               },
             ),
             ListTile(
@@ -427,9 +446,14 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
               title: const Text('Online (Daring)'),
               onTap: () async {
                 Navigator.pop(context);
-                final updated = widget.jadwal.copyWith(lokasiType: 'online', status: true);
-                await provider.updateJadwal(updated);
-                if (mounted) AppSnackbar.success(context, 'Status kelas praktikum diubah ke Online.');
+                final updated = _currentJadwal.copyWith(lokasiType: 'online', status: true);
+                final success = await provider.updateJadwal(updated);
+                if (success && mounted) {
+                  setState(() {
+                    _currentJadwal = updated;
+                  });
+                  AppSnackbar.success(context, 'Status kelas praktikum diubah ke Online.');
+                }
               },
             ),
             ListTile(
@@ -520,7 +544,7 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
 
                 // Recalculate student grades for attendance change
                 final db = FirebaseFirestore.instance;
-                final classDoc = await db.collection('kelas').doc(widget.jadwal.kelasId).get();
+                final classDoc = await db.collection('kelas').doc(_currentJadwal.kelasId).get();
                 if (classDoc.exists) {
                   final kelas = KelasModel.fromMap(classDoc.id, classDoc.data()!);
                   await provider.recalculateStudentGrades(
@@ -601,15 +625,15 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
                   'mahasiswaId': enrollment.mahasiswaId,
                   'mahasiswaNama': enrollment.mahasiswaNama,
                   'mahasiswaNim': enrollment.mahasiswaNim,
-                  'kelasId': widget.jadwal.kelasId,
-                  'kelasNama': widget.jadwal.kelasNama,
-                  'jadwalId': widget.jadwal.id,
-                  'matakuliahId': widget.jadwal.matakuliahId,
-                  'matakuliahNama': widget.jadwal.matakuliahNama,
-                  'matakuliahKode': widget.jadwal.matakuliahKode,
+                  'kelasId': _currentJadwal.kelasId,
+                  'kelasNama': _currentJadwal.kelasNama,
+                  'jadwalId': _currentJadwal.id,
+                  'matakuliahId': _currentJadwal.matakuliahId,
+                  'matakuliahNama': _currentJadwal.matakuliahNama,
+                  'matakuliahKode': _currentJadwal.matakuliahKode,
                   'pertemuanKe': activeMeeting.pertemuanKe,
                   'pertemuanId': activeMeeting.id,
-                  'jenisSesi': widget.jadwal.jenisSesi,
+                  'jenisSesi': _currentJadwal.jenisSesi,
                   'tanggal': dateStr,
                   'jamAbsensi': timeStr,
                   'status': selectedStatus,
@@ -626,7 +650,7 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
 
                 // Recalculate student grades
                 final db = FirebaseFirestore.instance;
-                final classDoc = await db.collection('kelas').doc(widget.jadwal.kelasId).get();
+                final classDoc = await db.collection('kelas').doc(_currentJadwal.kelasId).get();
                 if (classDoc.exists) {
                   final kelas = KelasModel.fromMap(classDoc.id, classDoc.data()!);
                   await provider.recalculateStudentGrades(
@@ -657,16 +681,19 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AsdosDashboardProvider>();
+    final viewInsets = MediaQuery.of(context).viewInsets;
 
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.85,
-      decoration: const BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        child: Column(
+    return Padding(
+      padding: EdgeInsets.only(bottom: viewInsets.bottom),
+      child: Container(
+        height: (MediaQuery.of(context).size.height * 0.85) - viewInsets.bottom,
+        decoration: const BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          child: Column(
           children: [
             Container(
               padding: const EdgeInsets.symmetric(vertical: 12),
@@ -702,7 +729,7 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
               child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                 stream: FirebaseFirestore.instance
                     .collection('pertemuan')
-                    .where('jadwalId', isEqualTo: widget.jadwal.id)
+                    .where('jadwalId', isEqualTo: _currentJadwal.id)
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
@@ -737,7 +764,7 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
                           _isInitializingMeetings = true;
                         });
                         try {
-                          final success = await provider.generateMeetingsForJadwal(widget.jadwal);
+                          final success = await provider.generateMeetingsForJadwal(_currentJadwal);
                           if (success) {
                             if (context.mounted) {
                               AppSnackbar.success(
@@ -804,8 +831,9 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildKelolaKelasTab(
     BuildContext context,
@@ -816,7 +844,7 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
   ) {
     String statusKelasText = 'Selesai';
     Color statusKelasColor = AppColors.info;
-    if (!widget.jadwal.status) {
+    if (!_currentJadwal.status) {
       statusKelasText = 'Dibatalkan';
       statusKelasColor = AppColors.error;
     } else if (activeMeeting != null) {
@@ -847,7 +875,7 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
                   children: [
                     Expanded(
                       child: Text(
-                        widget.jadwal.matakuliahNama,
+                        _currentJadwal.matakuliahNama,
                         style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -868,20 +896,20 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
                 const SizedBox(height: 12),
                 const Divider(),
                 const SizedBox(height: 12),
-                _buildInfoRow(Icons.class_rounded, 'Kelas', 'Kelas ${widget.jadwal.kelasNama}  •  Praktikum'),
-                _buildInfoRow(Icons.calendar_today_rounded, 'Waktu', '${widget.jadwal.hari}, ${widget.jadwal.jamMulai} - ${widget.jadwal.jamSelesai}'),
+                _buildInfoRow(Icons.class_rounded, 'Kelas', 'Kelas ${_currentJadwal.kelasNama}  •  Praktikum'),
+                _buildInfoRow(Icons.calendar_today_rounded, 'Waktu', '${_currentJadwal.hari}, ${_currentJadwal.jamMulai} - ${_currentJadwal.jamSelesai}'),
                 _buildInfoRow(
-                  widget.jadwal.isOnline ? Icons.videocam_rounded : Icons.room_rounded,
+                  _currentJadwal.isOnline ? Icons.videocam_rounded : Icons.room_rounded,
                   'Tempat',
-                  widget.jadwal.isOnline 
-                      ? 'Kelas Online (${widget.jadwal.platformMeet.toUpperCase()})' 
-                      : '${widget.jadwal.gedungNama} - ${widget.jadwal.ruanganNama}',
+                  _currentJadwal.isOnline 
+                      ? 'Kelas Online (${_currentJadwal.platformMeet.toUpperCase()})' 
+                      : '${_currentJadwal.gedungNama} - ${_currentJadwal.ruanganNama}',
                 ),
-                if (widget.jadwal.isOnline && widget.jadwal.linkMeet.isNotEmpty)
-                  _buildInfoRow(Icons.link_rounded, 'Link Meet', widget.jadwal.linkMeet),
-                if (!widget.jadwal.isOnline)
-                  _buildInfoRow(Icons.radar_rounded, 'Radius Presensi', '${widget.jadwal.radiusAbsensi} Meter'),
-                _buildInfoRow(Icons.access_time_filled_rounded, 'Toleransi Terlambat', '${widget.jadwal.toleransiMenit} Menit'),
+                if (_currentJadwal.isOnline && _currentJadwal.linkMeet.isNotEmpty)
+                  _buildInfoRow(Icons.link_rounded, 'Link Meet', _currentJadwal.linkMeet),
+                if (!_currentJadwal.isOnline)
+                  _buildInfoRow(Icons.radar_rounded, 'Radius Presensi', '${_currentJadwal.radiusAbsensi} Meter'),
+                _buildInfoRow(Icons.access_time_filled_rounded, 'Toleransi Terlambat', '${_currentJadwal.toleransiMenit} Menit'),
               ],
             ),
           ),
@@ -890,7 +918,7 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
           Text('Kontrol Sesi Praktikum', style: AppTextStyles.titleSmall.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
 
-          if (!widget.jadwal.status)
+          if (!_currentJadwal.status)
             Card(
               color: AppColors.error.withOpacity(0.05),
               elevation: 0,
@@ -920,12 +948,19 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
               focusNode: _topikFocusNode,
               label: 'Topik Pembahasan Praktikum',
               hint: 'Isi materi praktikum...',
-              onChanged: (text) {
-                FirebaseFirestore.instance
-                    .collection('pertemuan')
-                    .doc(activeMeeting.id)
-                    .update({'topik': text});
-              },
+              suffix: TextButton(
+                onPressed: () async {
+                  final text = _topikController.text.trim();
+                  await FirebaseFirestore.instance
+                      .collection('pertemuan')
+                      .doc(activeMeeting.id)
+                      .update({'topik': text});
+                  if (context.mounted) {
+                    AppSnackbar.success(context, 'Topik pembahasan berhasil disimpan.');
+                  }
+                },
+                child: const Text('Simpan', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
             ),
             const SizedBox(height: 16),
             AppButton(
@@ -1000,10 +1035,10 @@ class _AsdosAbsensiBottomSheetState extends State<AsdosAbsensiBottomSheet> with 
                 () => _showUbahStatusKelasDialog(context, provider),
               ),
               _buildConfigCard(
-                widget.jadwal.status ? Icons.cancel_rounded : Icons.check_circle_rounded,
-                widget.jadwal.status ? 'Batalkan Sesi' : 'Aktifkan Sesi',
+                _currentJadwal.status ? Icons.cancel_rounded : Icons.check_circle_rounded,
+                _currentJadwal.status ? 'Batalkan Sesi' : 'Aktifkan Sesi',
                 () => _showMembatalkanPerkuliahanDialog(context, provider),
-                color: widget.jadwal.status ? AppColors.error : AppColors.success,
+                color: _currentJadwal.status ? AppColors.error : AppColors.success,
               ),
             ],
           ),
