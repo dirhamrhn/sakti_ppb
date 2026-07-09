@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function profile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    function active() { return signedIn() && profile().status == true; }
+    function roleIs(role) { return active() && profile().role == role; }
+    function staff() {
+      return active() && profile().role in ['admin', 'dosen', 'asdos'];
+    }
+
+    match /users/{uid} {
+      allow read: if active() && (request.auth.uid == uid || roleIs('admin'));
+      allow create, update: if roleIs('admin') ||
+        (active() && request.auth.uid == uid &&
+         request.resource.data.role == resource.data.role &&
+         request.resource.data.status == resource.data.status);
+      allow delete: if roleIs('admin');
+    }
+
+    match /{collection}/{id} {
+      allow read: if active() && collection in [
+        'mata_kuliah', 'kelas', 'jadwal', 'pertemuan', 'materi', 'tugas',
+        'nilai', 'pengumuman', 'class_enrollments', 'buildings', 'rooms'
+      ];
+      allow write: if roleIs('admin') && collection in [
+        'mata_kuliah', 'kelas', 'jadwal', 'pertemuan', 'class_enrollments',
+        'buildings', 'rooms'
+      ];
+      allow write: if staff() && collection in [
+        'materi', 'tugas', 'nilai', 'pengumuman'
+      ];
+    }
+
+    match /absensi/{id} {
+      allow read: if active();
+      allow create: if active() &&
+        (request.resource.data.mahasiswaId == request.auth.uid || staff());
+      allow update: if staff() ||
+        (active() && resource.data.mahasiswaId == request.auth.uid);
+      allow delete: if roleIs('admin');
+    }
+
+    match /submissions/{id} {
+      allow read: if active() &&
+        (resource.data.mahasiswaId == request.auth.uid || staff());
+      allow create, update: if active() &&
+        request.resource.data.mahasiswaId == request.auth.uid;
+      allow update: if staff();
+    }
+
+    match /notifications/{id} {
+      allow read, update: if active() && resource.data.userId == request.auth.uid;
+      allow create: if staff();
+    }
+  }
+}
